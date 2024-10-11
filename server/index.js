@@ -7,11 +7,12 @@ import dotenv from 'dotenv';
 import githubRoutes from './routers/githubRouter.js';
 import aiRoutes from './routers/aiRouter.js';
 import config from './config/constants.js';
+import connectDB from './config/db.js';
 
 dotenv.config();
 const app = express();
 const PORT = config.port|| 8000;
-
+connectDB();
 app.use(cors());
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
