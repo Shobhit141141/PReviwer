@@ -26,7 +26,7 @@ const Home = () => {
 
   return (
     <div>
-      <div className="w-full flex flex-col md:flex-row gap-2">
+      <div className="w-full flex flex-col md:flex-row gap-2 p-4">
       <ActivePrs/>
       <User />
       </div>

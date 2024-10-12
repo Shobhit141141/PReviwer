@@ -10,3 +10,24 @@ main{
   -ms-overflow-style: none; 
   
 }
+
+/* For WebKit browsers */
+main::-webkit-scrollbar {
+  width: 12px;
+}
+
+main::-webkit-scrollbar-track {
+  background: #2a2a2a;
+}
+
+main::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 10px;
+  border: 3px solid #2a2a2a;
+}
+
+/* For Firefox */
+main {
+  scrollbar-color: #888 #2a2a2a;
+  scrollbar-width: thin;
+}

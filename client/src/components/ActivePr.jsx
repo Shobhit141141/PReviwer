@@ -3,52 +3,61 @@ import { getAllActivePRs } from "../apis/apis";
 import { useAuth } from "../context/AuthContext";
 import { Button, Tag } from "antd";
 import { IoLogOutOutline } from "react-icons/io5";
-import { ClockCircleOutlined } from "@ant-design/icons";
+import { ClockCircleOutlined, GithubFilled } from "@ant-design/icons";
 import { Badge } from "@radix-ui/themes/dist/cjs/index.js";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { TbGitPullRequest } from "react-icons/tb";
+
 const PRcard = ({ pr }) => {
   const navigate = useNavigate();
 
   const handleOpenPr = () => {
-    navigate('/pr', { state: { pr } });
+    navigate("/pr", { state: { pr } });
   };
   const formattedDate = new Date(pr.created_at).toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',  // 'short' gives Jan, Feb, etc.
-    day: 'numeric',
+    year: "numeric",
+    month: "short", // 'short' gives Jan, Feb, etc.
+    day: "numeric",
   });
   return (
-    <div className="bg-[#3d3d3d] w-full p-2 rounded-md shadow-sm hover:shadow-md transition-shadow duration-200">
-      {/* Top Section with PR Number, Title, and Repo Name */}
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <p className="text-blue-500 font-semibold text-lg">#{pr.number}</p>
-          <h2 className="text-white text-xl font-semibold">{pr.title}</h2>
+    <div className="bg-[#3d3d3d] w-full p-4 rounded-md shadow-sm hover:shadow-md transition-shadow duration-200">
+      <div className="flex flex-row justify-between items-start">
+        <div className="flex items-center gap-2 mb-2 md:mb-0">
+          <TbGitPullRequest className="text-2xl text-green-500" />
+          <h2 className="text-lg font-semibold text-wrap"> {pr.title.length > 15 ? `${pr.title.slice(0, 10)}...` : pr.title}</h2>
         </div>
-        <p className="text-gray-400 text-sm italic">Repo: {pr.base.repo.name}</p>
+        <div className="flex gap-2 items-center">
+          <Link to={pr.html_url} className="text-white">
+            <GithubFilled className="text-2xl md:text-3xl text-white" />
+          </Link>
+          <Button color="primary" variant="solid" className="h-[25px] md:h-auto" onClick={handleOpenPr}>
+            <IoLogOutOutline className="text-lg" />
+            Open
+          </Button>
+        </div>
       </div>
 
-      {/* PR Details Section */}
-      <div className="flex justify-between items-center mt-4">
-        <div className="flex items-center gap-4">
-          <p className="text-gray-300 text-sm">by <span className="font-medium text-white">{pr.head.user.login}</span></p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mt-4">
+        <div className="flex items-center gap-1 flex-wrap">
+          <span className="text-sm text-gray-300">
+            <span className="font-bold text-white">#{pr.number}</span>
+            <span className="mx-1">opened by</span>
+            <span className="font-medium text-white">{pr.head.user.login}</span>
+            <span className="mx-1">in</span>
+            <span className="font-medium text-white">{pr.base.repo.name}</span>
+            <span className="mx-1">repo</span>
+          </span>
+        </div>
+
+        <div className="mt-2 md:mt-0">
           <Badge
             color="green"
             className="text-gray-300 bg-gray-800 border border-gray-700 px-2 py-1 rounded-lg flex items-center gap-2"
           >
             <ClockCircleOutlined className="text-green-400" />
-            {formattedDate}          </Badge>
+            {formattedDate}
+          </Badge>
         </div>
-
-        {/* Open Button */}
-        <Button
-          color="primary"
-          variant="solid"
-          onClick={handleOpenPr}
-        >
-          <IoLogOutOutline className="text-lg" />
-          Open
-        </Button>
       </div>
     </div>
   );
@@ -75,34 +84,20 @@ function ActivePrs() {
     }
   }, [token]);
 
-    if (loading) {
-      return <div className="md:w-[50%] md:h-[85vh] h-1/2 flex flex-col p-2 bg-[#2b2b2b] justify-center items-center">
-
-  . . .
-      </div>;
-    }
+  if (loading) {
+    return (
+      <div className="md:w-[50%] md:h-[85vh] h-1/2 flex flex-col p-2 bg-[#2b2b2b] justify-center items-center">
+        . . .
+      </div>
+    );
+  }
 
   return (
     <div className="w-full md:w-[50%] md:h-[85vh] h-1/2 flex flex-col p-2 bg-[#2b2b2b] overflow-y-scroll">
-      <h1 className="ml-4">Active Pull Requests</h1>
+      <h1 className="ml-4 font-bold text-lg ">Active Pull Requests</h1>
 
       <div className="flex w-full justify-between px-4 py-2 gap-2 ">
         {activePrs.map((pr) => (
-          // <div
-          //   key={pr.id}
-          //   className="bg-[#151515] p-2 rounded-md flex flex-col justify-between"
-          // >
-          //   <p>#{pr.number}</p>
-          //   <h2>{pr.title}</h2>
-          //   <p>{pr.body}</p>
-          //   <a href={pr.html_url} target="_blank" rel="noreferrer">
-          //     View on GitHub
-          //   </a>
-          //   <p>{new Date(pr.created_at).toLocaleString()}</p>
-          //   <p>Head :{pr.head.label} </p>
-          //   <p>Base :{pr.base.label} </p>
-          //   <p> Created by : {pr.head.user.login}</p>
-          // </div>
           <PRcard key={pr.id} pr={pr} />
         ))}
       </div>

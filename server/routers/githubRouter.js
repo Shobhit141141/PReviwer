@@ -18,7 +18,7 @@ router.get('/github/callback', githubAuthCallback);
 router.get('/repos', collectAllRepos);
 router.get('/repos/:repo/pulls', fetchNewPRs);
 router.post('/repos/:repo/pulls/:pull_number/comments', postCommentOnPR);
-router.get('/repos/:repo/pulls/:pull_number', getSpecificPR);
+router.get('/repos/pull', getSpecificPR);
 router.post('/disconnect', disconnectFromGitHub);
 router.get('/active/prs', getAllActivePRs);
 // router.get('/pr/changes', getPullRequestChanges);

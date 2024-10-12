@@ -160,7 +160,7 @@ export const postCommentOnPR = async (req, res) => {
 // req : owner, repo, pull_number
 // res : response with PR
 export const getSpecificPR = async (req, res) => {
-  const { repo, pull_number } = req.params;
+  const { repo, pull_number } = req.body;
   const jwttoken = req.headers.authorization.split(' ')[1];
   const owner = jwt.verify(jwttoken, process.env.JWT_SECRET).username;
   const accessToken = await getTokenByUsername(owner);
@@ -177,7 +177,7 @@ export const getSpecificPR = async (req, res) => {
 
     res.json(response.data);
   } catch (error) {
-    console.error('Error fetching specific PR:', error);
+    console.error('Error fetching specific PR:', error.message);
     res.status(500).send('Failed to fetch PR');
   }
 };
