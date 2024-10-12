@@ -390,7 +390,7 @@ export const funcngetPullRequestChanges = async (
     // Return the files with commit messages
     return filesChanged;
   } catch (error) {
-    console.error('Error fetching pull request changes:', error);
+    console.error('Error fetching pull request changes:', error.message);
     throw new Error('Failed to fetch pull request changes');
   }
 };
@@ -400,7 +400,10 @@ export const funcngetPullRequestChanges = async (
 // res : response with AI review
 export const reviewPullRequest = async (req, res) => {
   const { repo, pullNumber } = req.body;
+  console.log('repo', repo);
+  console.log('pullNumber', pullNumber);
   const jwtToken = req.headers.authorization.split(' ')[1];
+  console.log('jwtToken', jwtToken);
   try {
     const filesChanged = await funcngetPullRequestChanges(
       repo,

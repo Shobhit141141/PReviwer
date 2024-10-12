@@ -1,36 +1,55 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useEffect } from "react";
+import { Button } from "@radix-ui/themes/dist/cjs/index.js";
+import { FaGithub } from "react-icons/fa";
 
 function User() {
   const { user, loading } = useAuth();
 
-  // useEffect(() => {
-  //   if (loading) {
-  //     return <div className="w-full md:w-1/2 p-4 flex justify-center items-center h-full">Loading...</div>;
-  //   }
-  // }, [loading]);
+  if (loading) {
+    return (
+      <div className="w-full md:w-[50%] p-4 bg-[#232323] h-1/2 flex justify-center items-center">
+        Loading...
+      </div>
+    );
+  }
 
-  // Ensure that the UI updates when the user state changes
   return (
-    <div className="w-full md:w-1/2 p-4 bg-[#232323]">
+    <div className="w-full h-fit md:w-[50%] p-6 bg-[#232323] rounded-lg shadow-lg flex flex-col items-center">
       {user ? (
-        <div>
-          <p>Username: {user.login}</p>
-          <p>Email: {user.name}</p>
-          <img
-            src={user.avatar_url}
-            alt="User Avatar"
-            className="w-20 h-20 rounded-full"
-          />
-          <p>Followers: {user.followers}</p>
-          <p>Following: {user.following}</p>
-          <p>Public Repos: {user.public_repos}</p>
-          <a href={user.html_url}>Github</a>
-          <p>Bio: {user.bio} </p>
+        <div className="w-full flex flex-col items-center space-y-6">
+          <div className="w-full flex justify-center">
+            <img
+              src={user.avatar_url}
+              alt="User Avatar"
+              className="w-24 h-24 rounded-full"
+            />
+          </div>
+          <div className="w-full grid grid-cols-2 gap-4 text-sm text-gray-300">
+            <p className="font-semibold">Username:</p>
+            <p>{user.login}</p>
+            <p className="font-semibold">Email:</p>
+            <p>{user.name}</p>
+            <p className="font-semibold">Followers:</p>
+            <p>{user.followers}</p>
+            <p className="font-semibold">Following:</p>
+            <p>{user.following}</p>
+            <p className="font-semibold">Public Repos:</p>
+            <p>{user.public_repos}</p>
+            <p className="font-semibold">Bio:</p>
+            <p>{user.bio}</p>
+          </div>
+          <Button color="primary" variant="surface">
+          <a
+            href={user.html_url}
+            className="font-medium no-underline flex justify-center items-center gap-2"
+          >
+           <FaGithub/>  View Github Profile
+          </a>
+          </Button>
         </div>
       ) : (
-        <p>No user data available. Please log in.</p>
+        <p className="text-center text-white">No user data available. Please log in.</p>
       )}
     </div>
   );

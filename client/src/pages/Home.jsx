@@ -26,7 +26,6 @@ const Home = () => {
 
   return (
     <div>
-      <h1>Welcome to the Home Page</h1>
       <div className="w-full flex flex-col md:flex-row gap-2">
       <ActivePrs/>
       <User />

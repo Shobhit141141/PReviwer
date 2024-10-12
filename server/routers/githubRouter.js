@@ -22,6 +22,6 @@ router.get('/repos/:repo/pulls/:pull_number', getSpecificPR);
 router.post('/disconnect', disconnectFromGitHub);
 router.get('/active/prs', getAllActivePRs);
 // router.get('/pr/changes', getPullRequestChanges);
-router.get('/pr/analysis', reviewPullRequest);
+router.post('/pr/analysis', reviewPullRequest);
 router.post('/pr/comment', commentOnPullRequest);
 export default router;
