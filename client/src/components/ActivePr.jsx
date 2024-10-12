@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { getAllActivePRs } from "../apis/apis";
 import { useAuth } from "../context/AuthContext";
-import { set } from "mongoose";
 
 function ActivePrs() {
   const [activePrs, setActivePrs] = useState([]);
@@ -29,7 +28,7 @@ function ActivePrs() {
   }
 
   return (
-    <div className="w-full md:w-1/2 flex flex-col p-2 bg-[#2b2b2b]">
+    <div className="w-full md:w-1/2 md:h-[80vh] h-1/2 flex flex-col p-2 bg-[#2b2b2b]">
       <h1>Active Pull Requests</h1>
       <div className="flex flex-wrap gap-2">
         {activePrs.map((pr) => (
@@ -37,6 +36,7 @@ function ActivePrs() {
             key={pr.id}
             className="bg-[#151515] p-2 rounded-md flex flex-col justify-between"
           >
+            <p>#{pr.number}</p>
             <h2>{pr.title}</h2>
             <p>{pr.body}</p>
             <a href={pr.html_url} target="_blank" rel="noreferrer">
@@ -49,6 +49,8 @@ function ActivePrs() {
           </div>
         ))}
       </div>
+
+
     </div>
   );
 }
