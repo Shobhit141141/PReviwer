@@ -58,6 +58,7 @@ export const AuthProvider = ({ children }) => {
           localStorage.removeItem("jwtToken");
           localStorage.removeItem("userData");
         }
+        window.location.href = "/";
       } catch (error) {
         console.error("Failed to disconnect from GitHub:", error);
       } finally {

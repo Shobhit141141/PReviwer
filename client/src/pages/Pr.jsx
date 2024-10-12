@@ -1,20 +1,28 @@
-import { Button } from "@radix-ui/themes/dist/cjs/index.js";
+import { Badge, Button } from "@radix-ui/themes/dist/cjs/index.js";
 import { FaGithub } from "react-icons/fa";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { fetchAnalysisReport, postComment } from "../apis/apis";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import ReactMarkdown from "react-markdown";
 import toast from "react-hot-toast";
 
 const PR = () => {
   const location = useLocation();
-  const { pr } = location.state;
 
   const [analysisReport, setAnalysisReport] = useState(null);
   const [analysisloading, setanalysisLoading] = useState(false);
   const [commentLoading, setCommentLoading] = useState(false);
-  const { token } = useAuth();
+  const { token, user ,loading} = useAuth();
+  const navigate = useNavigate();
+
+  if (!loading && !user) {
+    <div className="w-full md:w-[50%] p-4 bg-[#232323] h-1/2 flex justify-center items-center">
+      <p className="text-white">Please login to view this page</p>
+    </div>;
+  }
+
+  const { pr } = location.state;
   const getCommentOnPr = async () => {
     try {
       setanalysisLoading(true);
@@ -98,26 +106,26 @@ const PR = () => {
             </div>
           </div>
 
-          {/* Created At */}
-          <div className="flex flex-col">
-            <span className="text-yellow-500 font-medium">Created At</span>
-            <p className="text-lg">
-              {new Date(pr.created_at).toLocaleString()}
-            </p>
-          </div>
+    
 
           {/* Head */}
           <div className="flex flex-col">
             <span className="text-yellow-500 font-medium">Head Branch</span>
-            <p className="text-lg">{pr.head.label}</p>
+            <Badge color="cyan" className="w-fit" size={"3"}>{pr.head.label}</Badge>
           </div>
 
           {/* Base */}
           <div className="flex flex-col">
             <span className="text-yellow-500 font-medium">Base Branch</span>
-            <p className="text-lg">{pr.base.label}</p>
-          </div>
+            <Badge color="crimson" className="w-fit" size={"3"}>{pr.base.label}</Badge>          </div>
 
+      {/* Created At */}
+      <div className="flex flex-col">
+            <span className="text-yellow-500 font-medium">Created At</span>
+            <p className="text-lg">
+              {new Date(pr.created_at).toLocaleString()}
+            </p>
+          </div>
           {/* Creator */}
           <div className="flex flex-col">
             <span className="text-yellow-500 font-medium">Created By</span>

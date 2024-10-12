@@ -13,10 +13,12 @@ function App() {
       <Toaster/>
       <Navbar/>
     
-        <Routes>
+    <main className="pt-[60px]">
+    <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/pr" element={<PR />} />
         </Routes>
+    </main>
       </BrowserRouter>
     </>
   );

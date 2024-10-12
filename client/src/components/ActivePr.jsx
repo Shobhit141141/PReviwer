@@ -7,6 +7,7 @@ import { ClockCircleOutlined, GithubFilled } from "@ant-design/icons";
 import { Badge } from "@radix-ui/themes/dist/cjs/index.js";
 import { Link, useNavigate } from "react-router-dom";
 import { TbGitPullRequest } from "react-icons/tb";
+import { MdOutlineNotificationsActive } from "react-icons/md";
 
 const PRcard = ({ pr }) => {
   const navigate = useNavigate();
@@ -16,12 +17,12 @@ const PRcard = ({ pr }) => {
   };
   const formattedDate = new Date(pr.created_at).toLocaleDateString(undefined, {
     year: "numeric",
-    month: "short", // 'short' gives Jan, Feb, etc.
+    month: "short",
     day: "numeric",
   });
   return (
     <div className="bg-[#3d3d3d] w-full p-4 rounded-md shadow-sm hover:shadow-md transition-shadow duration-200">
-      <div className="flex flex-row justify-between items-start">
+      <div className="flex flex-col md:flex-row justify-between items-start">
         <div className="flex items-center gap-2 mb-2 md:mb-0">
           <TbGitPullRequest className="text-2xl text-green-500" />
           <h2 className="text-lg font-semibold text-wrap"> {pr.title.length > 15 ? `${pr.title.slice(0, 10)}...` : pr.title}</h2>
@@ -84,23 +85,33 @@ function ActivePrs() {
     }
   }, [token]);
 
-  if (loading) {
-    return (
-      <div className="md:w-[50%] md:h-[85vh] h-1/2 flex flex-col p-2 bg-[#2b2b2b] justify-center items-center">
-        . . .
-      </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="md:w-[50%] md:h-[85vh] h-1/2 flex flex-col p-2 bg-[#2b2b2b] justify-center items-center">
+  //       . . .
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="w-full md:w-[50%] md:h-[85vh] h-1/2 flex flex-col p-2 bg-[#2b2b2b] overflow-y-scroll">
-      <h1 className="ml-4 font-bold text-lg ">Active Pull Requests</h1>
+      <h1 className="ml-4 font-bold text-lg flex gap-2 items-center"><MdOutlineNotificationsActive/> Active Pull Requests</h1>
 
-      <div className="flex w-full justify-between px-4 py-2 gap-2 ">
-        {activePrs.map((pr) => (
-          <PRcard key={pr.id} pr={pr} />
-        ))}
-      </div>
+      {loading ? ( 
+         <div className=" flex flex-col h-full p-2 bg-[#2b2b2b] justify-center items-center">
+         . . .
+       </div>
+      ) : activePrs.length === 0 ? ( 
+        <div className="flex justify-center items-center h-full text-white">
+          <p>No active pull requests found.</p>
+        </div>
+      ) : (
+        <div className="flex w-full justify-between px-4 py-2 gap-2">
+          {activePrs.map((pr) => (
+            <PRcard key={pr.id} pr={pr} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
