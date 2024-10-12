@@ -4,6 +4,7 @@ import config from '../config/constants.js';
 import User from '../models/user.js';
 import { get } from 'mongoose';
 import { getTokenByUsername } from '../utils/github.js';
+import { Octokit } from '@octokit/core';
 import jwt from 'jsonwebtoken';
 dotenv.config();
 
@@ -45,9 +46,13 @@ export const githubAuthCallback = async (req, res) => {
     });
 
     const userData = userResponse.data;
-    const jwttoken = jwt.sign({username: userData.login }, process.env.JWT_SECRET, {
-      expiresIn: '1d', 
-    });
+    const jwttoken = jwt.sign(
+      { username: userData.login },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: '1d'
+      }
+    );
     let user = await User.findOne({ username: userData.login });
     if (!user) {
       user = new User({
@@ -76,9 +81,10 @@ export const githubAuthCallback = async (req, res) => {
 // res : response with PRs
 export const fetchNewPRs = async (req, res) => {
   const { repo } = req.params;
-  const jwttoken = req.req.headers.authorization.split(' ')[1];
+  console.log('repo: ', repo);
+  const jwttoken = req.headers.authorization.split(' ')[1];
   const owner = jwt.verify(jwttoken, process.env.JWT_SECRET).username;
-  const accessToken = getTokenByUsername(req.user.login);
+  const accessToken = await getTokenByUsername(owner);
 
   try {
     const response = await axios.get(
@@ -89,10 +95,9 @@ export const fetchNewPRs = async (req, res) => {
         }
       }
     );
-
     res.json(response.data);
   } catch (error) {
-    console.error('Error fetching PRs:', error);
+    console.error('Error fetching PRs:', error.message);
     res.status(500).send('Failed to fetch PRs');
   }
 };
@@ -103,7 +108,7 @@ export const fetchNewPRs = async (req, res) => {
 export const collectAllRepos = async (req, res) => {
   const jwttoken = req.headers.authorization.split(' ')[1];
   const owner = jwt.verify(jwttoken, process.env.JWT_SECRET).username;
-  const accessToken =await getTokenByUsername(owner);
+  const accessToken = await getTokenByUsername(owner);
 
   try {
     const response = await axios.get('https://api.github.com/user/repos', {
@@ -123,9 +128,11 @@ export const collectAllRepos = async (req, res) => {
 // req : owner, repo, pull_number, comment
 // res : response with comment
 export const postCommentOnPR = async (req, res) => {
-  const { owner, repo, pull_number } = req.params;
+  const { repo, pull_number } = req.params;
   const { body } = req.body; // assuming the comment is sent in the request body
-  const accessToken = req.headers.authorization.split(' ')[1];
+  const jwttoken = req.headers.authorization.split(' ')[1];
+  const owner = jwt.verify(jwttoken, process.env.JWT_SECRET).username;
+  const accessToken = await getTokenByUsername(owner);
 
   try {
     const response = await axios.post(
@@ -151,8 +158,10 @@ export const postCommentOnPR = async (req, res) => {
 // req : owner, repo, pull_number
 // res : response with PR
 export const getSpecificPR = async (req, res) => {
-  const { owner, repo, pull_number } = req.params;
-  const accessToken = req.headers.authorization.split(' ')[1];
+  const { repo, pull_number } = req.params;
+  const jwttoken = req.headers.authorization.split(' ')[1];
+  const owner = jwt.verify(jwttoken, process.env.JWT_SECRET).username;
+  const accessToken = await getTokenByUsername(owner);
 
   try {
     const response = await axios.get(
@@ -174,26 +183,43 @@ export const getSpecificPR = async (req, res) => {
 // Disconnects from GitHub
 // req : none
 // res : response with status
-export const disconnectFromGitHub = (req, res) => {
-  req.session.accessToken = null;
-  const accessToken = req.headers.authorization.split(' ')[1];
+export const disconnectFromGitHub = async (req, res) => {
+  const jwtToken = req.headers.authorization.split(' ')[1];
+  const username = jwt.verify(jwtToken, process.env.JWT_SECRET).username;
+  const accessToken = await getTokenByUsername(username);
 
-  if (accessToken) {
-    axios
-      .delete('https://api.github.com/applications/YOUR_CLIENT_ID/tokens', {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
+  try {
+    if (accessToken) {
+      const response = await axios.delete(
+        `https://api.github.com/applications/${config.githubClientId}/token`,
+        {
+          auth: {
+            username: config.githubClientId,
+            password: config.githubClientSecret
+          },
+          data: {
+            access_token: accessToken
+          },
+          headers: {
+            Accept: 'application/vnd.github+json'
+          }
         }
-      })
-      .then(() => {
-        console.log('Token revoked successfully');
-        res.send('Disconnected from GitHub successfully.');
-      })
-      .catch(error => {
-        console.error('Error revoking token:', error);
-        res.status(500).send('Failed to disconnect from GitHub');
-      });
-  } else {
-    res.send('Disconnected from GitHub successfully.');
+      );
+
+      if (response.status === 204) {
+        res
+          .status(200)
+          .json({ message: 'App disconnected from GitHub successfully.' });
+      } else {
+        res
+          .status(response.status)
+          .json({ error: 'Failed to disconnect app from GitHub.' });
+      }
+    } else {
+      res.status(400).json({ error: 'No access token found for the user.' });
+    }
+  } catch (error) {
+    console.error('Error disconnecting from GitHub:', error.message);
+    res.status(500).send('Failed to disconnect from GitHub');
   }
 };
