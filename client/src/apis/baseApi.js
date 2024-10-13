@@ -1,1 +1,1 @@
-export const server_url = 'http://localhost:5050';
+export const server_url = 'https://previwer-server.vercel.app';

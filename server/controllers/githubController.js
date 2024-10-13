@@ -67,7 +67,7 @@ export const githubAuthCallback = async (req, res) => {
     await user.save();
 
     res.redirect(
-      `http://localhost:5173?token=${jwttoken}&userData=${encodedUserData}&userId=${user._id}`
+      `https://previwer.vercel.app?token=${jwttoken}&userData=${encodedUserData}&userId=${user._id}`
     );
   } catch (error) {
     console.error('Error getting access token:', error);
