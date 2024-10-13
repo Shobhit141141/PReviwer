@@ -16,7 +16,7 @@ const Navbar = () => {
       <Link to="/" className="text-2xl font-bold text-white">
         <div className="flex gap-2 items-center">
           <img src="/git.png" alt="" className="w-[40px]" />
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent hidden sm:block">
             PReviewer
           </h1>
         </div>
