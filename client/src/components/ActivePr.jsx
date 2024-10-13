@@ -9,11 +9,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { TbGitPullRequest } from "react-icons/tb";
 import { MdOutlineNotificationsActive } from "react-icons/md";
 
-const PRcard = ({ pr }) => {
+const PRcard = ({ pr,commented }) => {
   const navigate = useNavigate();
 
   const handleOpenPr = () => {
-    navigate("/pr", { state: { pr } });
+    navigate("/pr", { state: { pr,commented } });
   };
   const formattedDate = new Date(pr.created_at).toLocaleDateString(undefined, {
     year: "numeric",
@@ -21,7 +21,7 @@ const PRcard = ({ pr }) => {
     day: "numeric",
   });
   return (
-    <div className="bg-[#3d3d3d] w-full p-4 rounded-md shadow-sm hover:shadow-md transition-shadow duration-200">
+    <div className={`bg-[#3d3d3d] w-full p-4 rounded-md shadow-sm border-4 hover:shadow-md hover:translate-x-1 transition-all duration-200 ${commented ? " border-green-400" : "border-[#3d3d3d]"}`}>
       <div className="flex flex-col md:flex-row justify-between items-start">
         <div className="flex items-center gap-2 mb-2 md:mb-0">
           <TbGitPullRequest className="text-2xl text-green-500" />
@@ -72,7 +72,8 @@ function ActivePrs() {
     try {
       setLoading(true);
       const response = await getAllActivePRs(token);
-      setActivePrs(response);
+      console.log(response.activePRs);
+      setActivePrs(response.activePRs);
     } catch (error) {
       console.error("Error fetching active PRs:", error);
     } finally {
@@ -107,8 +108,8 @@ function ActivePrs() {
         </div>
       ) : (
         <div className="flex w-full justify-between px-4 py-2 gap-2">
-          {activePrs.map((pr) => (
-            <PRcard key={pr.id} pr={pr} />
+          {activePrs.map(({pr,commented}) => (
+            <PRcard key={pr.id} pr={pr} commented={commented}/>
           ))}
         </div>
       )}

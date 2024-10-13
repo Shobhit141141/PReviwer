@@ -16,6 +16,10 @@ const userSchema = new mongoose.Schema({
   accessToken: {
     type: Object,
     required: true
+  },
+  repo_prnumber: {
+    type: [String],  // An array of strings storing "repoName/prNumber"
+    default: [],   
   }
 });
 

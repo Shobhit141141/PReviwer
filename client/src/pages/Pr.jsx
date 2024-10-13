@@ -22,7 +22,8 @@ const PR = () => {
     </div>;
   }
 
-  const { pr } = location.state;
+  const { pr ,commented} = location.state;
+  console.log(pr, commented);
   const getCommentOnPr = async () => {
     try {
       setanalysisLoading(true);
@@ -130,6 +131,14 @@ const PR = () => {
           <div className="flex flex-col">
             <span className="text-yellow-500 font-medium">Created By</span>
             <p className="text-lg">{pr.head.user.login}</p>
+          </div>
+
+          {/* Commented */}
+          <div className="flex flex-col">
+            <span className="text-yellow-500 font-medium">Commented?</span>
+            {
+              commented ? <p className="w-fit text-green-500" size={"3"}>Yes</p> : <p  className="w-fit text-red-500" size={"3"}>No</p>
+            }
           </div>
         </div>
       </div>

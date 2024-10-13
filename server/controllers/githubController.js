@@ -235,6 +235,7 @@ export const getAllActivePRs = async (req, res) => {
   const accessToken = await getTokenByUsername(owner);
 
   try {
+    // Fetch all repositories for the user
     const repoResponse = await axios.get('https://api.github.com/user/repos', {
       headers: {
         Authorization: `Bearer ${accessToken}`
@@ -244,9 +245,11 @@ export const getAllActivePRs = async (req, res) => {
     const repos = repoResponse.data;
     let activePRs = [];
 
+    // Loop through each repository and fetch active PRs
     for (const repo of repos) {
       if (repo.owner.login === owner) {
         try {
+          // Fetch all PRs for the repo
           const prResponse = await axios.get(
             `https://api.github.com/repos/${repo.owner.login}/${repo.name}/pulls`,
             {
@@ -255,7 +258,31 @@ export const getAllActivePRs = async (req, res) => {
               }
             }
           );
-          activePRs = [...activePRs, ...prResponse.data];
+
+          const prs = prResponse.data;
+
+          // Check if user has commented on each PR
+          for (const pr of prs) {
+            const prNumber = pr.number; // Get the PR number
+            const repoName = repo.name; // Get the repo name
+            const repoPrEntry = `${repoName}/${prNumber}`;
+
+            // Fetch the user from DB to check if they commented on this PR
+            const user = await User.findOne({ username: owner });
+
+            if (!user) {
+              return res.status(404).json({ message: 'User not found' });
+            }
+
+            // Check if the user has commented on this PR
+            const isPRCommented = user.repo_prnumber.includes(repoPrEntry);
+
+            // Add PR details along with comment status
+            activePRs.push({
+              pr,
+              commented: isPRCommented
+            });
+          }
         } catch (error) {
           console.error(
             `Error fetching PRs for repo ${repo.name}:`,
@@ -264,7 +291,9 @@ export const getAllActivePRs = async (req, res) => {
         }
       }
     }
-    res.json(activePRs);
+
+    // Return the active PRs with their comment status
+    res.json({ activePRs });
   } catch (error) {
     console.error('Error fetching active PRs:', error.message);
     res.status(500).send('Failed to fetch active PRs');
@@ -463,6 +492,12 @@ export const commentOnPullRequest = async (req, res) => {
         }
       }
     );
+
+    const user = await User.findOne({ username: owner });
+    if (user) {
+      user.repo_prnumber.push(`${repo}/${pullNumber}`);
+      await user.save();
+    }
 
     res.status(201).json('Comment added successfully');
   } catch (error) {
