@@ -340,6 +340,7 @@ export const reviewPullRequest = async (req, res) => {
       - Additions: ${file.additions || 0}
       - Deletions: ${file.deletions || 0}
       - Patch: ${file.patch || 'No patch available'}
+      - Commit Message: ${file.commitMessage || 'No commit message available'}
       `
         )
         .join('')}

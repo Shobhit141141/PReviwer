@@ -25,7 +25,7 @@ const PRcard = ({ pr,commented }) => {
       <div className="flex flex-col md:flex-row justify-between items-start">
         <div className="flex items-center gap-2 mb-2 md:mb-0">
           <TbGitPullRequest className="text-2xl text-green-500" />
-          <h2 className="text-lg font-semibold text-wrap"> {pr.title.length > 15 ? `${pr.title.slice(0, 10)}...` : pr.title}</h2>
+          <h2 className="text-lg font-semibold text-wrap"> {pr.title.length > 25 ? `${pr.title.slice(0, 25)}...` : pr.title}</h2>
         </div>
         <div className="flex gap-2 items-center">
           <Link to={pr.html_url} className="text-white">
@@ -106,7 +106,7 @@ function ActivePrs() {
           <p>No active pull requests found.</p>
         </div>
       ) : (
-        <div className="flex w-full justify-between px-4 py-2 gap-2">
+        <div className="flex flex-col w-full justify-between px-4 py-2 gap-2">
           {activePrs.map(({pr,commented}) => (
             <PRcard key={pr.id} pr={pr} commented={commented}/>
           ))}
