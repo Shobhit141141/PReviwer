@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema({
     required: true
   },
   repo_prnumber: {
-    type: [String],  // An array of strings storing "repoName/prNumber"
+    type: [String],  // "repoName/prNumber"
     default: [],   
   }
 });

@@ -6,7 +6,7 @@ dotenv.config();
 
 const connectDB = async () => {
   try {
-    const uri = 'mongodb://localhost:27017/previewer';
+    const uri = config.dbUrl || 'mongodb://localhost:27017/previewer';
 
     await mongoose.connect(uri, {});
 

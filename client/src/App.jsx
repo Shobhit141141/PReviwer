@@ -13,7 +13,7 @@ function App() {
       <Toaster/>
       <Navbar/>
     
-    <main className="pt-[60px]">
+    <main className="pt-[60px] ">
     <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/pr" element={<PR />} />

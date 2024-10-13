@@ -39,9 +39,7 @@ const Home = () => {
           <ul className="list-disc list-inside text-gray-200 space-y-1">
             <li>🚀 Instant feedback on PRs</li>
             <li>🔍 Automated code analysis</li>
-            <li>💬 In-line commenting</li>
-            <li>🛠️ Customizable review rules</li>
-            <li>📈 Performance insights</li>
+            <li>🛠️ Customizable review</li>
             <li>🔗 GitHub integration</li>
           </ul>
           <p className="text-yellow-400 mt-4">Connect to Github and enhance your development workflow today!</p>

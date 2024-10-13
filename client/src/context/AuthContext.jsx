@@ -10,7 +10,6 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(false); // Loading state
-
   // Function to handle GitHub OAuth login
   const connectWithGitHub = async () => {
     setLoading(true); // Set loading state before redirect
@@ -58,7 +57,7 @@ export const AuthProvider = ({ children }) => {
           localStorage.removeItem("jwtToken");
           localStorage.removeItem("userData");
         }
-        window.location.href = "/";
+
       } catch (error) {
         console.error("Failed to disconnect from GitHub:", error);
       } finally {

@@ -23,9 +23,9 @@ app.use('/auth', githubRoutes);
 app.use('/api', aiRoutes);
 
 app.get('/', (req, res) => {
-  res.status(200).send('Welcome to PReviewer 🎉');
+  res.status(200).send('Welcome to PReviewer 🔍📃🎉');
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is listening on port http://localhost:${PORT}`);
+  console.log(`Server is listening on port ${PORT}`);
 });

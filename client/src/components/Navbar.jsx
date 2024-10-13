@@ -1,12 +1,16 @@
 import { useAuth } from "../context/AuthContext";
 import { FaGithub } from "react-icons/fa";
 import { Button } from "antd";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { VscDebugDisconnect } from "react-icons/vsc";
 
 const Navbar = () => {
   const { user, connectWithGitHub, disconnectFromGitHub,loading } = useAuth();
-
+  const navigate = useNavigate();
+  const disconnect = async () => {
+    await disconnectFromGitHub();
+    navigate("/");
+  }
   return (
     <nav className="w-full h-[60px] mb-4 flex justify-between px-4 items-center fixed z-50 glassmorphism-bg ">
       <Link to="/" className="text-2xl font-bold text-white">
@@ -22,7 +26,7 @@ const Navbar = () => {
           color="danger"
           variant="solid"
           className="font-bold"
-          onClick={disconnectFromGitHub}
+          onClick={disconnect}
         >
           <VscDebugDisconnect className="text-[22px]"/> Disconnect
         </Button>

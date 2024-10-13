@@ -2,7 +2,6 @@ import axios from 'axios';
 import dotenv from 'dotenv';
 import config from '../config/constants.js';
 import User from '../models/user.js';
-import { getTokenByUsername } from '../utils/github.js';
 import { Octokit } from '@octokit/core';
 import jwt from 'jsonwebtoken';
 import { generateAIResponse } from '../utils/geminiAI.js';
@@ -48,7 +47,7 @@ export const githubAuthCallback = async (req, res) => {
     const userData = userResponse.data;
     const jwttoken = jwt.sign(
       { username: userData.login },
-      process.env.JWT_SECRET,
+      config.jwtSecret,
       {
         expiresIn: '1d'
       }
@@ -66,10 +65,7 @@ export const githubAuthCallback = async (req, res) => {
     const userDataJson = JSON.stringify(userData);
     const encodedUserData = encodeURIComponent(userDataJson);
     await user.save();
-    // res.json({
-    //   message: `Hello ${userData.login}, you're logged in with GitHub!`,
-    //   token: jwttoken
-    // });
+
     res.redirect(
       `http://localhost:5173?token=${jwttoken}&userData=${encodedUserData}&userId=${user._id}`
     );
@@ -84,9 +80,8 @@ export const githubAuthCallback = async (req, res) => {
 // res : response with PRs
 export const fetchNewPRs = async (req, res) => {
   const { repo } = req.params;
-  const jwttoken = req.headers.authorization.split(' ')[1];
-  const owner = jwt.verify(jwttoken, process.env.JWT_SECRET).username;
-  const accessToken = await getTokenByUsername(owner);
+  const accessToken = req.accessToken;
+  const owner = req.username;
 
   try {
     const response = await axios.get(
@@ -108,10 +103,8 @@ export const fetchNewPRs = async (req, res) => {
 // req : none
 // res : response with repositories
 export const collectAllRepos = async (req, res) => {
-  const jwttoken = req.headers.authorization.split(' ')[1];
-  const owner = jwt.verify(jwttoken, process.env.JWT_SECRET).username;
-  const accessToken = await getTokenByUsername(owner);
-
+  const accessToken = req.accessToken;
+  const owner = req.username;
   try {
     const response = await axios.get('https://api.github.com/user/repos', {
       headers: {
@@ -126,45 +119,13 @@ export const collectAllRepos = async (req, res) => {
   }
 };
 
-// Posts a comment on a PR
-// req : owner, repo, pull_number, comment
-// res : response with comment
-export const postCommentOnPR = async (req, res) => {
-  const { repo, pull_number } = req.params;
-  const { body } = req.body; // assuming the comment is sent in the request body
-  const jwttoken = req.headers.authorization.split(' ')[1];
-  const owner = jwt.verify(jwttoken, process.env.JWT_SECRET).username;
-  const accessToken = await getTokenByUsername(owner);
-
-  try {
-    const response = await axios.post(
-      `https://api.github.com/repos/${owner}/${repo}/issues/${pull_number}/comments`,
-      {
-        body
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
-      }
-    );
-
-    res.json(response.data);
-  } catch (error) {
-    console.error('Error posting comment:', error);
-    res.status(500).send('Failed to post comment');
-  }
-};
-
 // Fetches a specific PR
 // req : owner, repo, pull_number
 // res : response with PR
 export const getSpecificPR = async (req, res) => {
   const { repo, pull_number } = req.body;
-  const jwttoken = req.headers.authorization.split(' ')[1];
-  const owner = jwt.verify(jwttoken, process.env.JWT_SECRET).username;
-  const accessToken = await getTokenByUsername(owner);
-
+  const accessToken = req.accessToken;
+  const owner = req.username;
   try {
     const response = await axios.get(
       `https://api.github.com/repos/${owner}/${repo}/pulls/${pull_number}`,
@@ -186,10 +147,8 @@ export const getSpecificPR = async (req, res) => {
 // req : none
 // res : response with status
 export const disconnectFromGitHub = async (req, res) => {
-  const jwtToken = req.headers.authorization.split(' ')[1];
-  const username = jwt.verify(jwtToken, process.env.JWT_SECRET).username;
-  const accessToken = await getTokenByUsername(username);
-
+  const accessToken = req.accessToken;
+  const owner = req.username;
   try {
     if (accessToken) {
       const response = await axios.delete(
@@ -230,12 +189,9 @@ export const disconnectFromGitHub = async (req, res) => {
 // req : none
 // res : response with active PRs across owned repositories
 export const getAllActivePRs = async (req, res) => {
-  const jwtToken = req.headers.authorization.split(' ')[1];
-  const owner = jwt.verify(jwtToken, process.env.JWT_SECRET).username;
-  const accessToken = await getTokenByUsername(owner);
-
+  const accessToken = req.accessToken;
+  const owner = req.username;
   try {
-    // Fetch all repositories for the user
     const repoResponse = await axios.get('https://api.github.com/user/repos', {
       headers: {
         Authorization: `Bearer ${accessToken}`
@@ -245,11 +201,9 @@ export const getAllActivePRs = async (req, res) => {
     const repos = repoResponse.data;
     let activePRs = [];
 
-    // Loop through each repository and fetch active PRs
     for (const repo of repos) {
       if (repo.owner.login === owner) {
         try {
-          // Fetch all PRs for the repo
           const prResponse = await axios.get(
             `https://api.github.com/repos/${repo.owner.login}/${repo.name}/pulls`,
             {
@@ -261,23 +215,18 @@ export const getAllActivePRs = async (req, res) => {
 
           const prs = prResponse.data;
 
-          // Check if user has commented on each PR
           for (const pr of prs) {
-            const prNumber = pr.number; // Get the PR number
-            const repoName = repo.name; // Get the repo name
+            const prNumber = pr.number
+            const repoName = repo.name; 
             const repoPrEntry = `${repoName}/${prNumber}`;
 
-            // Fetch the user from DB to check if they commented on this PR
             const user = await User.findOne({ username: owner });
 
             if (!user) {
               return res.status(404).json({ message: 'User not found' });
             }
-
-            // Check if the user has commented on this PR
             const isPRCommented = user.repo_prnumber.includes(repoPrEntry);
 
-            // Add PR details along with comment status
             activePRs.push({
               pr,
               commented: isPRCommented
@@ -291,8 +240,6 @@ export const getAllActivePRs = async (req, res) => {
         }
       }
     }
-
-    // Return the active PRs with their comment status
     res.json({ activePRs });
   } catch (error) {
     console.error('Error fetching active PRs:', error.message);
@@ -300,84 +247,21 @@ export const getAllActivePRs = async (req, res) => {
   }
 };
 
-// // Fetches the changes made in a pull request
-// // req : owner, repo, pullNumber
-// // res : response with changes made in the PR
-// export const getPullRequestChanges = async (req, res) => {
-//   const { repo, pullNumber } = req.body;
-//   const jwtToken = req.headers.authorization.split(" ")[1];
-//   const owner = jwt.verify(jwtToken, process.env.JWT_SECRET).username;
-//   const token = await getTokenByUsername(owner);
 
-//   try {
-//     // Step 1: Fetch the pull request details (optional, can remove if not needed)
-//     const prResponse = await axios.get(
-//       `https://api.github.com/repos/${owner}/${repo}/pulls/${pullNumber}`,
-//       {
-//         headers: {
-//           Authorization: `Bearer ${token}`,
-//         },
-//       }
-//     );
-
-//     // Step 2: Fetch commits associated with the PR
-//     const commitsResponse = await axios.get(
-//       `https://api.github.com/repos/${owner}/${repo}/pulls/${pullNumber}/commits`,
-//       {
-//         headers: {
-//           Authorization: `Bearer ${token}`,
-//         },
-//       }
-//     );
-
-//     // Extract files changed and commit messages
-//     const filesChanged = [];
-//     for (const commit of commitsResponse.data) {
-
-//       const commitResponse = await axios.get(
-//         `https://api.github.com/repos/${owner}/${repo}/commits/${commit.sha}`,
-//         {
-//           headers: {
-//             Authorization: `Bearer ${token}`,
-//           },
-//         }
-//       );
-//       // Extract the files and include commit message
-//       commitResponse.data.files.forEach(file => {
-//         filesChanged.push({
-//           filename: file.filename,
-//           status: file.status, // can be 'added', 'modified', 'removed'
-//           additions: file.additions || 0,
-//           deletions: file.deletions || 0,
-//           changes: file.changes,
-//           patch: file.patch,
-//           commitMessage: commit.commit.message
-//         });
-//       });
-//     }
-//     // Return the files with commit messages
-//     res.json(filesChanged);
-//   } catch (error) {
-//     console.error("Error fetching pull request changes:", error);
-//     res.status(500).send("Failed to fetch pull request changes");
-//   }
-// };
 
 export const funcngetPullRequestChanges = async (
+  owner,
   repo,
   pullNumber,
-  jwtToken
+  accessToken
 ) => {
-  const owner = jwt.verify(jwtToken, process.env.JWT_SECRET).username;
-  const token = await getTokenByUsername(owner);
-
   try {
     // Step 1: Fetch the pull request details (optional, can remove if not needed)
     const prResponse = await axios.get(
       `https://api.github.com/repos/${owner}/${repo}/pulls/${pullNumber}`,
       {
         headers: {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${accessToken}`
         }
       }
     );
@@ -387,7 +271,7 @@ export const funcngetPullRequestChanges = async (
       `https://api.github.com/repos/${owner}/${repo}/pulls/${pullNumber}/commits`,
       {
         headers: {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${accessToken}`
         }
       }
     );
@@ -399,7 +283,7 @@ export const funcngetPullRequestChanges = async (
         `https://api.github.com/repos/${owner}/${repo}/commits/${commit.sha}`,
         {
           headers: {
-            Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${accessToken}`
           }
         }
       );
@@ -429,15 +313,14 @@ export const funcngetPullRequestChanges = async (
 // res : response with AI review
 export const reviewPullRequest = async (req, res) => {
   const { repo, pullNumber } = req.body;
-  console.log('repo', repo);
-  console.log('pullNumber', pullNumber);
-  const jwtToken = req.headers.authorization.split(' ')[1];
-  console.log('jwtToken', jwtToken);
+  const accessToken = req.accessToken;
+  const owner = req.username;
   try {
     const filesChanged = await funcngetPullRequestChanges(
+      owner,
       repo,
       pullNumber,
-      jwtToken
+      accessToken
     );
     if (!filesChanged || filesChanged.length === 0) {
       return res
@@ -477,10 +360,8 @@ export const reviewPullRequest = async (req, res) => {
 // res : response with comment
 export const commentOnPullRequest = async (req, res) => {
   const { repo, pullNumber, comment } = req.body;
-  const jwtToken = req.headers.authorization.split(' ')[1];
-  const owner = jwt.verify(jwtToken, process.env.JWT_SECRET).username;
-  const token = await getTokenByUsername(owner);
-
+  const token = req.accessToken;
+  const owner = req.username;
   try {
     const response = await axios.post(
       `https://api.github.com/repos/${owner}/${repo}/issues/${pullNumber}/comments`,

@@ -4,24 +4,22 @@ import {
   githubAuthCallback,
   fetchNewPRs,
   collectAllRepos,
-  postCommentOnPR,
   getSpecificPR,
   disconnectFromGitHub,
   getAllActivePRs,
   reviewPullRequest,
   commentOnPullRequest
 } from '../controllers/githubController.js';
+import {verifyJWT} from '../middleware/verifyToken.js';
 const router = express.Router();
 
 router.get('/github', githubAuth);
 router.get('/github/callback', githubAuthCallback);
-router.get('/repos', collectAllRepos);
-router.get('/repos/:repo/pulls', fetchNewPRs);
-router.post('/repos/:repo/pulls/:pull_number/comments', postCommentOnPR);
-router.get('/repos/pull', getSpecificPR);
-router.post('/disconnect', disconnectFromGitHub);
-router.get('/active/prs', getAllActivePRs);
-// router.get('/pr/changes', getPullRequestChanges);
-router.post('/pr/analysis', reviewPullRequest);
-router.post('/pr/comment', commentOnPullRequest);
+router.get('/repos', verifyJWT, collectAllRepos);
+router.get('/repos/:repo/pulls', verifyJWT, fetchNewPRs);
+router.get('/repos/pull', verifyJWT, getSpecificPR);
+router.post('/disconnect', verifyJWT, disconnectFromGitHub);
+router.get('/active/prs', verifyJWT, getAllActivePRs);
+router.post('/pr/analysis', verifyJWT, reviewPullRequest);
+router.post('/pr/comment', verifyJWT, commentOnPullRequest);
 export default router;

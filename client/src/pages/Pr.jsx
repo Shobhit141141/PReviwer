@@ -4,16 +4,20 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { fetchAnalysisReport, postComment } from "../apis/apis";
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import ReactMarkdown from "react-markdown";
+import { marked } from "marked";
 import toast from "react-hot-toast";
+import ReactQuill from "react-quill"; // Import React Quill
+import "react-quill/dist/quill.snow.css"; // Import Quill's stylesheet
 
 const PR = () => {
   const location = useLocation();
 
   const [analysisReport, setAnalysisReport] = useState(null);
   const [analysisloading, setanalysisLoading] = useState(false);
+  const [editableReport, setEditableReport] = useState("");
+
   const [commentLoading, setCommentLoading] = useState(false);
-  const { token, user ,loading} = useAuth();
+  const { token, user, loading } = useAuth();
   const navigate = useNavigate();
 
   if (!loading && !user) {
@@ -22,8 +26,7 @@ const PR = () => {
     </div>;
   }
 
-  const { pr ,commented} = location.state;
-  console.log(pr, commented);
+  const { pr, commented } = location.state;
   const getCommentOnPr = async () => {
     try {
       setanalysisLoading(true);
@@ -34,6 +37,7 @@ const PR = () => {
       );
 
       setAnalysisReport(response.review);
+      setEditableReport(marked(response.review));
       toast.success("Fetched analysis report successfully");
     } catch (error) {
       console.error(error);
@@ -50,7 +54,7 @@ const PR = () => {
         token,
         pr.base.repo.name,
         pr.number,
-        analysisReport
+        editableReport
       );
 
       toast.success("Commented on PR successfully");
@@ -62,8 +66,14 @@ const PR = () => {
     }
   };
 
+  const handleReportChange = (value) => {
+    setEditableReport(value);
+  };
+
+  
+
   return (
-    <div className="w-full p-4 text-white">
+    <div className="w-full p-4 text-white hide-scrollbar">
       <div
         key={pr.id}
         className="bg-[#1f1f1f] p-4 rounded-md flex flex-col gap-4"
@@ -107,21 +117,24 @@ const PR = () => {
             </div>
           </div>
 
-    
-
           {/* Head */}
           <div className="flex flex-col">
             <span className="text-yellow-500 font-medium">Head Branch</span>
-            <Badge color="cyan" className="w-fit" size={"3"}>{pr.head.label}</Badge>
+            <Badge color="cyan" className="w-fit" size={"3"}>
+              {pr.head.label}
+            </Badge>
           </div>
 
           {/* Base */}
           <div className="flex flex-col">
             <span className="text-yellow-500 font-medium">Base Branch</span>
-            <Badge color="crimson" className="w-fit" size={"3"}>{pr.base.label}</Badge>          </div>
+            <Badge color="crimson" className="w-fit" size={"3"}>
+              {pr.base.label}
+            </Badge>{" "}
+          </div>
 
-      {/* Created At */}
-      <div className="flex flex-col">
+          {/* Created At */}
+          <div className="flex flex-col">
             <span className="text-yellow-500 font-medium">Created At</span>
             <p className="text-lg">
               {new Date(pr.created_at).toLocaleString()}
@@ -136,9 +149,15 @@ const PR = () => {
           {/* Commented */}
           <div className="flex flex-col">
             <span className="text-yellow-500 font-medium">Commented?</span>
-            {
-              commented ? <p className="w-fit text-green-500" size={"3"}>Yes</p> : <p  className="w-fit text-red-500" size={"3"}>No</p>
-            }
+            {commented ? (
+              <p className="w-fit text-green-500" size={"3"}>
+                Yes
+              </p>
+            ) : (
+              <p className="w-fit text-red-500" size={"3"}>
+                No
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -158,12 +177,15 @@ const PR = () => {
             {commentLoading ? "Posting..." : "Post Comment"}
           </Button>
         </div>{" "}
-        {analysisReport && (
+        {editableReport && (
           <div className="bg-[#1f1f1f] p-4 rounded-md mt-4">
             <h2 className="text-yellow-500 font-medium">Analysis Report</h2>
-            <div className="markdown-body">
-              <ReactMarkdown>{analysisReport}</ReactMarkdown>
-            </div>
+            <ReactQuill
+              value={editableReport} // Bind value to editableReport
+              onChange={handleReportChange} // Handle changes
+              theme="snow" // You can change the theme to 'bubble' if you prefer
+              className="h-fit" // Adjust height as needed
+            />
           </div>
         )}
       </div>

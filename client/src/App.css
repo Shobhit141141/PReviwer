@@ -38,3 +38,10 @@ main {
   -webkit-backdrop-filter: blur(10px); /* For Safari */
 
 }
+ *{
+  scrollbar-width: none; /* For Firefox */
+}
+
+*::-webkit-scrollbar {
+  display: none; /* For WebKit browsers */
+ }

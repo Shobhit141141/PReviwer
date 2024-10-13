@@ -72,7 +72,6 @@ function ActivePrs() {
     try {
       setLoading(true);
       const response = await getAllActivePRs(token);
-      console.log(response.activePRs);
       setActivePrs(response.activePRs);
     } catch (error) {
       console.error("Error fetching active PRs:", error);
