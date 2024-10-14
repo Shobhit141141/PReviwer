@@ -9,7 +9,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { TbGitPullRequest } from "react-icons/tb";
 import { MdOutlineNotificationsActive } from "react-icons/md";
 
-const PRcard = ({ pr,commented }) => {
+export const PRcard = ({ pr,commented }) => {
   const navigate = useNavigate();
 
   const handleOpenPr = () => {

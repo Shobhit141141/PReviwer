@@ -58,3 +58,39 @@ export const postComment = async (token, repo_name, prNumber, comment) => {
     return "Failed to post comment";
   }
 }
+
+export const getGithubRepos = async (token) => {
+  try {
+    const response = await axios.get(`${server_url}/auth/repos`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching repos:", error);
+    return [];
+  }
+}
+
+export const connectPRWebhook = async (token, repo) => {
+  try {
+    const response = await axios.post(
+      `${server_url}/auth/connect-webhook`,
+      {
+        repo,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  }
+  catch (error) {
+    console.error("Error connecting PR webhook:", error);
+    return "Failed to connect webhook";
+  }
+}

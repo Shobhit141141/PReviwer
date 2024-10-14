@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 
 import githubRoutes from './routers/githubRouter.js';
 import aiRoutes from './routers/aiRouter.js';
+import webhookRoutes from './routers/webhook.js';
 import config from './config/constants.js';
 import connectDB from './config/db.js';
 
@@ -21,7 +22,7 @@ app.use(morgan('dev'));
 
 app.use('/auth', githubRoutes);
 app.use('/api', aiRoutes);
-
+app.use('/webhook', webhookRoutes);
 app.get('/', (req, res) => {
   res.status(200).send('Welcome to PReviewer 🔍📃🎉');
 });

@@ -20,6 +20,14 @@ const userSchema = new mongoose.Schema({
   repo_prnumber: {
     type: [String],  // "repoName/prNumber"
     default: [],   
+  },
+  hookedRepo : {
+    type: String,
+    default: '',
+  },
+  hookId : {
+    type: Number,
+    default: null,
   }
 });
 

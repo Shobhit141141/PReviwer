@@ -36,14 +36,13 @@ export const githubAuthCallback = async (req, res) => {
       }
     );
 
-    const accessToken = tokenResponse.data.access_token;
 
+    const accessToken = tokenResponse.data.access_token;
     const userResponse = await axios.get('https://api.github.com/user', {
       headers: {
         Authorization: `Bearer ${accessToken}`
       }
     });
-
     const userData = userResponse.data;
     const jwttoken = jwt.sign(
       { username: userData.login },
@@ -56,7 +55,8 @@ export const githubAuthCallback = async (req, res) => {
     if (!user) {
       user = new User({
         username: userData.login,
-        accessToken: accessToken
+        accessToken: accessToken,
+
       });
     } else {
       user.accessToken = accessToken;
@@ -70,7 +70,7 @@ export const githubAuthCallback = async (req, res) => {
       `https://previwer.vercel.app?token=${jwttoken}&userData=${encodedUserData}&userId=${user._id}`
     );
   } catch (error) {
-    console.error('Error getting access token:', error);
+    console.error('Error getting access token:', error.data || error.message);
     res.status(500).send('Authentication failed');
   }
 };
@@ -105,6 +105,7 @@ export const fetchNewPRs = async (req, res) => {
 export const collectAllRepos = async (req, res) => {
   const accessToken = req.accessToken;
   const owner = req.username;
+
   try {
     const response = await axios.get('https://api.github.com/user/repos', {
       headers: {
@@ -112,12 +113,17 @@ export const collectAllRepos = async (req, res) => {
       }
     });
 
-    res.json(response.data);
+    // Filter repositories to only include those created by the owner
+    const ownerRepos = response.data.filter(repo => repo.owner.login === owner);
+    
+    const repoNames = ownerRepos.map(repo => repo.name);
+    res.json(repoNames);
   } catch (error) {
     console.error('Error fetching repositories:', error);
     res.status(500).send('Failed to fetch repositories');
   }
 };
+
 
 // Fetches a specific PR
 // req : owner, repo, pull_number
