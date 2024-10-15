@@ -66,6 +66,28 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const checkToken = async (storedToken) => {
+    
+    if (storedToken) {
+      try {
+        const response = await axios.get(`${server_url}/valid-token`, {
+          headers: {
+            Authorization: `Bearer ${storedToken}`,
+          },
+        });
+       
+        console.log("verify response");
+      } catch (error) {
+        console.error("Error in checking token:", error);
+        if (error.response && error.response.status === 401) {
+          console.error("Token expired, disconnecting from GitHub");
+          localStorage.removeItem("jwtToken");
+          localStorage.removeItem("userData");
+          window.location.reload();
+        }
+      }
+    }
+  };
   // Function to auto-login if token exists in localStorage
   useEffect(() => {
     const storedToken = localStorage.getItem("jwtToken");
@@ -73,7 +95,10 @@ export const AuthProvider = ({ children }) => {
 
     if (storedToken) {
       setToken(storedToken);
+      console.log("token", storedToken);
+      checkToken(storedToken)
     }
+
 
     if (storedUserData) {
       setUser(JSON.parse(decodeURIComponent(storedUserData)));

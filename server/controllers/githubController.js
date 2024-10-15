@@ -48,7 +48,7 @@ export const githubAuthCallback = async (req, res) => {
       { username: userData.login },
       config.jwtSecret,
       {
-        expiresIn: '1d'
+        expiresIn: '7d'
       }
     );
     let user = await User.findOne({ username: userData.login });
@@ -243,6 +243,9 @@ export const getAllActivePRs = async (req, res) => {
             `Error fetching PRs for repo ${repo.name}:`,
             error.message
           );
+          if (error.response && error.response.status === 401) {
+            return res.status(401).send('unauthorized');
+          }
         }
       }
     }

@@ -9,6 +9,7 @@ import aiRoutes from './routers/aiRouter.js';
 import webhookRoutes from './routers/webhook.js';
 import config from './config/constants.js';
 import connectDB from './config/db.js';
+import { verifyJWT } from './middleware/verifyToken.js';
 
 dotenv.config();
 const app = express();
@@ -27,6 +28,9 @@ app.get('/', (req, res) => {
   res.status(200).send('Welcome to PReviewer 🔍📃🎉');
 });
 
+app.get('/valid-token', verifyJWT, (req, res) => {
+  res.status(200).json({ message: 'Token is valid', username: req.username });
+});
 app.listen(PORT, () => {
   console.log(`Server is listening on port ${PORT}`);
 });
