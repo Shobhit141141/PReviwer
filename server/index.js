@@ -15,11 +15,16 @@ dotenv.config();
 const app = express();
 const PORT = config.port|| 8000;
 connectDB();
-app.use(cors());
+app.use(cors({
+  origin: '*', // Allow all origins
+  methods: 'GET,HEAD,OPTIONS,POST,PUT', // Specify allowed methods
+  allowedHeaders: 'Origin, X-Requested-With, Content-Type, Accept, x-client-key, x-client-token, x-client-secret, Authorization', // Specify allowed headers
+}));
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.json());
 app.use(morgan('dev'));
+
 
 app.use('/auth', githubRoutes);
 app.use('/api', aiRoutes);
