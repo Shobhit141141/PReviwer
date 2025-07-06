@@ -1,6 +1,7 @@
 <div align="center" style="display: flex; flex-direction: row; align-items: center;">
     <img src="client/public/git.png" alt="PR Viewer Logo" width="100px" height="100px">
-    <h1 align="center" id="title" style="font-size: calc(100px / 2.5);">PR Viewer</h1>
+    <h1 align="center" id="title" style="font-size: calc(100px / 2.5);">PR Viewer v1.5</h1>
+    <h2 align="center" id="subtitle" style="font-size: calc(100px / 3);">PR viewer is getting better, <span style="color: #4CAF50;">with new features!</span></h2>
 </div>
 
 <p id="description">PR Viewer is a cutting-edge platform that analyzes Pull Requests (PRs) using an advanced AI model (Gemini) to provide insightful comments directly on the PR. It integrates with GitHub REST APIs and uses Octokit for interacting with repositories, offering seamless authentication via JWT and secure token storage with MongoDB and CryptoJS.</p>
