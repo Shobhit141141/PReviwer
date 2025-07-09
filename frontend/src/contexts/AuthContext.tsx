@@ -106,6 +106,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         try {
           const refreshResponse = await api.refreshAccessToken();
           api.setAccessToken(refreshResponse.access_token);
+          api.setRefreshToken(refreshResponse.refresh_token);
           await refreshUser();
         } catch (refreshError) {
           // Refresh failed, clear everything
@@ -130,6 +131,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const authResponse = await api.handleAuthRedirect();
         if (authResponse) {
           api.setAccessToken(authResponse.access_token);
+          api.setRefreshToken(authResponse.refresh_token);
           setUser(authResponse.user);
           // Clean up URL
           window.history.replaceState({}, document.title, window.location.pathname);
@@ -165,12 +167,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (token) {
           const refreshResponse = await api.refreshAccessToken();
           api.setAccessToken(refreshResponse.access_token);
+          api.setRefreshToken(refreshResponse.refresh_token);
         }
       } catch (error) {
         console.warn('Token refresh failed:', error);
-        // Don't show error to user for background refresh failures
       }
-    }, 10 * 60 * 1000); // Refresh every 10 minutes
+    }, 60 * 60 * 1000); // Refresh every 1 hour
 
     return () => clearInterval(refreshInterval);
   }, [isAuthenticated]);

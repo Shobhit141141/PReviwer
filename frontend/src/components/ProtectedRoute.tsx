@@ -19,30 +19,44 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 }) => {
   const { isLoading, isAuthenticated, error, login, clearError } = useAuth();
 
-  if (!isLoading) {
-    return(
-      <div className="flex h-screen w-full">
-       <div className="space-y-4">
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen w-full px-4 py-6">
+        <div className="w-full space-y-8">
 
+          {/* Stats Overview */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
 
-            {/* Stats Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                {/* Avatar + Info Card */}
-                <Skeleton className=" rounded-xl p-6 border border-gray-800 lg:col-span-2 lg:row-span-2 flex flex-col justify-between transition-colors" id='glassmorphism'>
-            
-                    <Skeleton className="mt-6 space-y-1">
-                       
-                    </Skeleton>
-                </Skeleton>
+            {/* Avatar + Info Card */}
+            <Skeleton className="rounded-xl p-6 border border-gray-800 lg:col-span-2 lg:row-span-2 w-full max-sm:h-[200px]" />
 
-                {[1, 2, 3, 4].map((_, index) => (
-                    <Skeleton key={index} className=" rounded-xl p-6 border border-gray-800 w-[300px] h-[120px]" id='glassmorphism'>
-                        
-                    </Skeleton>
-                ))}
+            {[1, 2, 3, 4].map((_, index) => (
+              <Skeleton
+                key={index}
+                className="rounded-xl p-6 border border-gray-800 w-full h-[120px] col-span-1"
+              />
+            ))}
+          </div>
+
+          {/* Bottom Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 w-full">
+
+            {/* Left */}
+            <div className="space-y-6 lg:col-span-2">
+              <Skeleton className="rounded-xl border border-gray-800 p-6 h-[200px] w-full" />
+              <Skeleton className="rounded-xl border border-gray-800 p-6 h-[600px] w-full" />
             </div>
+
+            {/* Right Sidebar */}
+            <div className="space-y-6">
+              <Skeleton className="rounded-xl border border-gray-800 p-6 h-[400px] w-full" />
+              <Skeleton className="rounded-xl border border-gray-800 p-6 h-[400px] w-full" />
+              <Skeleton className="rounded-xl border border-gray-800 p-6 h-[400px] w-full" />
+            </div>
+          </div>
         </div>
       </div>
+
 
 
     );

@@ -6,8 +6,6 @@ import { logDebug } from '../utils/logger';
 
 export const githubAuthMiddleware = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const authHeader = req.headers.authorization;
-  logDebug('GITHUB_AUTH_MIDDLEWARE', authHeader);
-
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     res.status(401).json({ error: 'Missing or invalid token' });
     return;
@@ -23,9 +21,6 @@ export const githubAuthMiddleware = async (req: Request, res: Response, next: Ne
         Authorization: `Bearer ${accessToken}`,
       },
     });
-
-    logDebug('GITHUB_AUTH_MIDDLEWARE', userRes.data);
-
    
     const user = await User.findOne({
       githubId: userRes.data.id.toString(),
@@ -38,7 +33,7 @@ export const githubAuthMiddleware = async (req: Request, res: Response, next: Ne
 
     const userInfo: UserInfo = {
       id: user._id.toString(),
-      email: 'test@test.com',
+      email: user.email,
       name: user.name,
       username: user.username,
       avatar: user.avatar,

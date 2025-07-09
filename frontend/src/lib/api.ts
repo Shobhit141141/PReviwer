@@ -17,10 +17,12 @@ export interface AuthResponse {
   message: string;
   user: User;
   access_token: string;
+  refresh_token: string;
 }
 
 export interface RefreshTokenResponse {
   access_token: string;
+  refresh_token: string;
 }
 
 export interface ApiErrorResponse {
@@ -59,6 +61,7 @@ export const api = {
     const urlParams = new URLSearchParams(window.location.search);
     const userData = urlParams.get("user");
     const accessToken = urlParams.get("token");
+    const refreshToken = urlParams.get("refresh_token");
     const error = urlParams.get("error");
 
     if (error) {
@@ -68,7 +71,7 @@ export const api = {
     if (userData && accessToken) {
       try {
         const user = JSON.parse(decodeURIComponent(userData));
-        return { message: "Login successful", user, access_token: accessToken };
+        return { message: "Login successful", user, access_token: accessToken, refresh_token: refreshToken || "" };
       } catch (err) {
         throw new ApiError("Invalid user data received", 400);
       }
@@ -83,12 +86,18 @@ export const api = {
       throw new ApiError("No access token found", 401);
     }
 
+    const refreshToken = api.getRefreshToken();
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    };
+    if (refreshToken) {
+      headers["x-refresh-token"] = refreshToken;
+    }
+
     const response = await fetch(`${API_BASE_URL}/api/github/refresh`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers,
     });
     return handleResponse(response);
   },
@@ -131,8 +140,16 @@ export const api = {
     localStorage.setItem("github_access_token", token);
   },
 
+  setRefreshToken: (token: string) => {
+    localStorage.setItem("github_refresh_token", token);
+  },
+
   getAccessToken: (): string | null => {
     return localStorage.getItem("github_access_token");
+  },
+
+  getRefreshToken: (): string | null => {
+    return localStorage.getItem("github_refresh_token");
   },
 
   removeAccessToken: () => {
@@ -150,6 +167,87 @@ export const api = {
     } catch (error) {
       return false;
     }
+  },
+};
+
+// Playground API
+export const playgroundApi = {
+  configureModel: async (data: any) => {
+    const token = api.getAccessToken();
+    if (!token) throw new ApiError('No access token found', 401);
+    const response = await fetch(`${API_BASE_URL}/api/playground/configure`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+    return handleResponse(response);
+  },
+  testModelConnection: async (data: any) => {
+    const token = api.getAccessToken();
+    if (!token) throw new ApiError('No access token found', 401);
+    const response = await fetch(`${API_BASE_URL}/api/playground/test-connection`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+    return handleResponse(response);
+  },
+  testSystemPrompt: async (data: any) => {
+    const token = api.getAccessToken();
+    if (!token) throw new ApiError('No access token found', 401);
+    const response = await fetch(`${API_BASE_URL}/api/playground/test-system-prompt`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+    return handleResponse(response);
+  },
+  abTestPrompts: async (data: any) => {
+    const token = api.getAccessToken();
+    if (!token) throw new ApiError('No access token found', 401);
+    const response = await fetch(`${API_BASE_URL}/api/playground/ab-test`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+    return handleResponse(response);
+  },
+  savePrompts: async (data: any) => {
+    const token = api.getAccessToken();
+    if (!token) throw new ApiError('No access token found', 401);
+    const response = await fetch(`${API_BASE_URL}/api/playground/save-prompts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+    return handleResponse(response);
+  },
+  getPlaygroundConfig: async () => {
+    const token = api.getAccessToken();
+    if (!token) throw new ApiError('No access token found', 401);
+    const response = await fetch(`${API_BASE_URL}/api/playground/config`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return handleResponse(response);
   },
 };
 

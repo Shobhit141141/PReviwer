@@ -32,6 +32,7 @@ export const decrypt = (encrypted: string): string => {
   }
 };
 
+
 export const isEncrypted = (text: string): boolean => {
   return text.includes(':');
 };

@@ -15,6 +15,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.56.0",
+    "@google/generative-ai": "^0.24.1",
     "@typescript-eslint/eslint-plugin": "^8.19.0",
     "@typescript-eslint/parser": "^8.19.0",
     "axios": "^1.10.0",
@@ -25,6 +27,7 @@
     "morgan": "^1.10.0",
     "node-cron": "^3.0.3",
     "nodemon": "^3.1.9",
+    "openai": "^5.8.2",
     "typescript-eslint": "^8.19.0",
     "zod": "^3.24.1"
   },

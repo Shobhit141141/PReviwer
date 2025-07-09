@@ -3,6 +3,7 @@ dotenv.config();
 const requiredEnvVars = ['GITHUB_CLIENT_ID', 'GITHUB_CLIENT_SECRET'];
 requiredEnvVars.forEach((key) => {
   if (!process.env[key]) {
+    console.log(process.env[key]);
     throw new Error(`Environment variable ${key} is required but not set.`);
   }
 });

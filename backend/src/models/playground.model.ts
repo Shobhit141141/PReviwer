@@ -1,6 +1,9 @@
 import mongoose from 'mongoose';
 import { CONSTANTS } from '../config/constants';
 import { encrypt } from '../utils/encrypt_decrypt';
+import { MODELS_FOR_EVERY_PROVIDER } from '../config/enums';
+
+
 
 const playgroundSchema = new mongoose.Schema({
   user: {
@@ -21,7 +24,14 @@ const playgroundSchema = new mongoose.Schema({
   llm_model: {
     type: String,
     required: true,
-    enum: ['gpt-3.5-turbo', 'gpt-4', 'gpt-4o', 'gpt-4o-mini', 'claude-2', 'claude-instant-100k'],
+    validate: {
+      validator: function (value: string): boolean {
+        const provider = (this as any).llm_provider as keyof typeof MODELS_FOR_EVERY_PROVIDER;
+        if (!provider || !MODELS_FOR_EVERY_PROVIDER[provider]) return false;
+        return MODELS_FOR_EVERY_PROVIDER[provider].includes(value);
+      },
+      message: 'llm_model is not valid for the selected llm_provider',
+    },
   },
   llm_provider: {
     type: String,
@@ -32,14 +42,18 @@ const playgroundSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-});
-
-// Middleware to encrypt the llm_api_key using encrypt util function before saving the playground document
-playgroundSchema.pre('save', async function (next) {
-  if (this.isModified('llm_api_key')) {
-    this.llm_api_key = await encrypt(this.llm_api_key);
-  }
-  next();
+  temperature: {
+    type: Number,
+    required: true,
+    min: 0,
+    max: 2,
+    default: 0.7,
+  },
+  max_tokens: {
+    type: Number,
+    required: true,
+    default: 1000,
+  },
 });
 
 const Playground = mongoose.model('Playground', playgroundSchema);

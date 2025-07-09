@@ -1,11 +1,9 @@
 import { Router } from 'express';
 import { githubAuthMiddleware } from '../middlewares/verifyToken';
 import User from '../models/user.model';
-import { logDebug } from '../utils/logger';
 
 const router = Router();
 
-// Get current user profile
 router.get('/profile', githubAuthMiddleware, async (req, res): Promise<void> => {
   try {
     if (!req.user) {
@@ -14,7 +12,6 @@ router.get('/profile', githubAuthMiddleware, async (req, res): Promise<void> => 
     }
 
     const user = await User.findById(req.user.id);
-    logDebug('USER_PROFILE', user);
     if (!user) {
       res.status(404).json({ error: 'User not found' });
       return;

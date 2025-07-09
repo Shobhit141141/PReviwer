@@ -155,7 +155,7 @@ const Dashboard = () => {
     commits: number;
   }
 
- 
+
 
   return (
     <div className="h-screen text-white overflow-y-auto relative bg-gray-900">
@@ -183,6 +183,8 @@ const Dashboard = () => {
 
                 {/* Repository Stats */}
                 <div className="space-y-8">
+                  
+                  {/* Top Repositories */}
                   <div className=" rounded-xl border border-gray-800" id='glassmorphism'>
                     <div className="p-6 border-b border-gray-800">
                       <h2 className="text-xl font-semibold">Top Repositories</h2>
