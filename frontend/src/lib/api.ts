@@ -31,7 +31,7 @@ export interface ApiErrorResponse {
 }
 
 class ApiError extends Error {
-  constructor(message: string, public status: number, public data?: any) {
+  constructor(message: string, public status: number, public data?: ApiErrorResponse) {
     super(message);
     this.name = "ApiError";
   }
@@ -73,6 +73,7 @@ export const api = {
         const user = JSON.parse(decodeURIComponent(userData));
         return { message: "Login successful", user, access_token: accessToken, refresh_token: refreshToken || "" };
       } catch (err) {
+        console.error("Failed to parse user data:", err);
         throw new ApiError("Invalid user data received", 400);
       }
     }
@@ -120,12 +121,28 @@ export const api = {
 
   // User Management
   getCurrentUser: async (): Promise<User> => {
-    const token = localStorage.getItem("github_access_token");
+    const token = api.getAccessToken();
     if (!token) {
       throw new ApiError("No access token found", 401);
     }
 
     const response = await fetch(`${API_BASE_URL}/api/user/profile`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return handleResponse(response);
+  },
+
+  // User Analytics
+  getUserAnalytics: async () => {
+    const token = api.getAccessToken();
+    if (!token) {
+      throw new ApiError("No access token found", 401);
+    }
+    const response = await fetch(`${API_BASE_URL}/api/user/analytics`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -156,6 +173,10 @@ export const api = {
     localStorage.removeItem("github_access_token");
   },
 
+  removeRefreshToken: () => {
+    localStorage.removeItem("github_refresh_token");
+  },
+
   // Check if token is valid
   isTokenValid: async (): Promise<boolean> => {
     try {
@@ -165,6 +186,7 @@ export const api = {
       await api.getCurrentUser();
       return true;
     } catch (error) {
+      console.error("Failed to validate token:", error);
       return false;
     }
   },
@@ -172,7 +194,7 @@ export const api = {
 
 // Playground API
 export const playgroundApi = {
-  configureModel: async (data: any) => {
+  configureModel: async (data: unknown) => {
     const token = api.getAccessToken();
     if (!token) throw new ApiError('No access token found', 401);
     const response = await fetch(`${API_BASE_URL}/api/playground/configure`, {
@@ -185,7 +207,7 @@ export const playgroundApi = {
     });
     return handleResponse(response);
   },
-  testModelConnection: async (data: any) => {
+  testModelConnection: async (data : unknown) => {
     const token = api.getAccessToken();
     if (!token) throw new ApiError('No access token found', 401);
     const response = await fetch(`${API_BASE_URL}/api/playground/test-connection`, {
@@ -198,7 +220,7 @@ export const playgroundApi = {
     });
     return handleResponse(response);
   },
-  testSystemPrompt: async (data: any) => {
+  testSystemPrompt: async (data: unknown) => {
     const token = api.getAccessToken();
     if (!token) throw new ApiError('No access token found', 401);
     const response = await fetch(`${API_BASE_URL}/api/playground/test-system-prompt`, {
@@ -211,7 +233,7 @@ export const playgroundApi = {
     });
     return handleResponse(response);
   },
-  abTestPrompts: async (data: any) => {
+  abTestPrompts: async (data: unknown) => {
     const token = api.getAccessToken();
     if (!token) throw new ApiError('No access token found', 401);
     const response = await fetch(`${API_BASE_URL}/api/playground/ab-test`, {
@@ -224,7 +246,7 @@ export const playgroundApi = {
     });
     return handleResponse(response);
   },
-  savePrompts: async (data: any) => {
+  savePrompts: async (data: unknown) => {
     const token = api.getAccessToken();
     if (!token) throw new ApiError('No access token found', 401);
     const response = await fetch(`${API_BASE_URL}/api/playground/save-prompts`, {
@@ -241,6 +263,34 @@ export const playgroundApi = {
     const token = api.getAccessToken();
     if (!token) throw new ApiError('No access token found', 401);
     const response = await fetch(`${API_BASE_URL}/api/playground/config`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return handleResponse(response);
+  },
+};
+
+export const githubApi = {
+  getActivePullRequests: async () => {
+    const token = api.getAccessToken();
+    if (!token) throw new ApiError('No access token found', 401);
+    const response = await fetch(`${API_BASE_URL}/api/github/active-pull-requests`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return handleResponse(response);
+  },
+
+  getWeeklyActivity: async () => {
+    const token = api.getAccessToken();
+    if (!token) throw new ApiError('No access token found', 401);
+    const response = await fetch(`${API_BASE_URL}/api/github/weekly-activity`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

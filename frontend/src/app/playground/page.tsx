@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { playgroundApi } from "@/lib/api";
-import PlaygroundCard from "@/components/playgroundCard";
 import {
   Card,
   CardContent,
@@ -10,28 +9,11 @@ import {
   CardTitle
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue
-} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Eye, EyeOff } from "lucide-react";
+import { ChevronDown, Eye, EyeOff } from "lucide-react";
+import { MODELS, PROVIDERS } from "@/config/enums";
 
-const PROVIDERS = [
-  { label: "OpenAI", value: "openai" },
-  { label: "Anthropic", value: "anthropic" },
-  { label: "Google", value: "google" }
-];
-
-const MODELS = {
-  openai: ["gpt-3.5-turbo", "gpt-4", "gpt-4o"],
-  anthropic: ["claude-3-opus", "claude-3-sonnet"],
-  google: ["gemini-2.5-pro"]
-};
 
 export default function PlaygroundPage() {
   const [llm_provider, setProvider] = useState<keyof typeof MODELS>(PROVIDERS[0].value as keyof typeof MODELS);
@@ -41,9 +23,9 @@ export default function PlaygroundPage() {
   const [system_prompt, setSystemPrompt] = useState("");
   const [secondary_system_prompt, setSecondarySystemPrompt] = useState("");
   const [loading, setLoading] = useState(false);
-  const [testResult, setTestResult] = useState<any>(null);
-  const [abResult, setAbResult] = useState<any>(null);
-  const [promptResults, setPromptResults] = useState<any>(null);
+  const [testResult, setTestResult] = useState<{ message: string } | null>(null);
+  const [abResult, setAbResult] = useState<{ input: string; primary: string; secondary: string } | null>(null);
+  const [promptResults, setPromptResults] = useState<{ type: string; prompt: string; response: string }[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const getModelConfig = async () => {
@@ -52,26 +34,22 @@ export default function PlaygroundPage() {
     try {
       const res = await playgroundApi.getPlaygroundConfig();
       if (res?.data) {
-        // Set all state at once in a batch
-        setProvider(res.data.llm_provider);
+        setProvider(res.data.llm_provider as keyof typeof MODELS);
         setModel(res.data.llm_model || MODELS[res.data.llm_provider as keyof typeof MODELS][0]);
         setApiKey(res.data.llm_api_key || "");
         setSystemPrompt(res.data.system_prompt || "");
         setSecondarySystemPrompt(res.data.secondary_system_prompt || "");
       }
-    } catch (err: any) {
-      setError(err?.data?.error || err.message);
+    } catch (err: unknown) {
+      if (typeof err === "object" && err !== null) {
+        setError((err as { data?: { error?: string }; message?: string }).data?.error || (err as { message?: string }).message || "Unknown error");
+      } else {
+        setError("Unknown error");
+      }
     } finally {
       setLoading(false);
-    }
+    } 
   };
-
-  useEffect(() => {
-    // When provider changes, ensure model is valid for the new provider
-    if (!MODELS[llm_provider].includes(llm_model)) {
-      setModel(MODELS[llm_provider][0]);
-    }
-  }, [llm_provider]);
 
   useEffect(() => {
     getModelConfig();
@@ -90,8 +68,12 @@ export default function PlaygroundPage() {
         secondary_system_prompt
       });
       setTestResult({ message: res.message });
-    } catch (err: any) {
-      setError(err?.data?.error || err.message);
+    } catch (err: unknown) {
+      if (typeof err === "object" && err !== null) {
+        setError((err as { data?: { error?: string }; message?: string }).data?.error || (err as { message?: string }).message || "Unknown error");
+      } else {
+        setError("Unknown error");
+      }
     } finally {
       setLoading(false);
     }
@@ -111,8 +93,12 @@ export default function PlaygroundPage() {
           ? "✅ Connection successful!"
           : "❌ Connection failed: " + res.error
       });
-    } catch (err: any) {
-      setError(err?.data?.error || err.message);
+    } catch (err : unknown) {
+      if (typeof err === "object" && err !== null) {
+        setError((err as { data?: { error?: string }; message?: string }).data?.error || (err as { message?: string }).message || "Unknown error");
+      } else {
+        setError("Unknown error");
+      }
     } finally {
       setLoading(false);
     }
@@ -129,8 +115,12 @@ export default function PlaygroundPage() {
         system_prompt
       });
       setPromptResults(res.results);
-    } catch (err: any) {
-      setError(err?.data?.error || err.message);
+    } catch (err: unknown) {
+      if (typeof err === "object" && err !== null) {
+        setError((err as { data?: { error?: string }; message?: string }).data?.error || (err as { message?: string }).message || "Unknown error");
+      } else {
+        setError("Unknown error");
+      }
     } finally {
       setLoading(false);
     }
@@ -148,8 +138,12 @@ export default function PlaygroundPage() {
         secondary_system_prompt
       });
       setAbResult(res);
-    } catch (err: any) {
-      setError(err?.data?.error || err.message);
+    } catch (err: unknown) {
+      if (typeof err === "object" && err !== null) {
+        setError((err as { data?: { error?: string }; message?: string }).data?.error || (err as { message?: string }).message || "Unknown error");
+      } else {
+        setError("Unknown error");
+      }
     } finally {
       setLoading(false);
     }
@@ -164,12 +158,20 @@ export default function PlaygroundPage() {
         secondary_system_prompt
       });
       setTestResult({ message: res.message });
-    } catch (err: any) {
-      setError(err?.data?.error || err.message);
+    } catch (err: unknown) {
+      if (typeof err === "object" && err !== null) {
+        setError((err as { data?: { error?: string }; message?: string }).data?.error || (err as { message?: string }).message || "Unknown error");
+      } else {
+        setError("Unknown error");
+      }
     } finally {
       setLoading(false);
     }
   };
+
+
+  const [providerOpen, setProviderOpen] = useState(false);
+  const [modelOpen, setModelOpen] = useState(false);
 
   return (
     <div className="max-w-4xl mx-auto py-10 px-4 space-y-8">
@@ -185,50 +187,72 @@ export default function PlaygroundPage() {
         <CardContent>
           <form onSubmit={handleConfigure} className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <Label>Provider</Label>
-                <Select
-                  value={llm_provider}
-                  onValueChange={(val) => {
-                    const provider = val as keyof typeof MODELS;
-                    setProvider(provider);
-                    setModel(MODELS[provider][0]);
-                  }}
+              {/* Provider Dropdown */}
+              <div className="relative inline-block text-left">
+                <button
+                type="button"
+                  onClick={() => setProviderOpen((prev) => !prev)}
+                  className="text-white bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 focus:ring-2 focus:outline-none focus:ring-white/30 font-medium rounded-lg text-sm px-5 py-2.5 inline-flex items-center"
                 >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select provider" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PROVIDERS.map((p) => (
-                      <SelectItem key={p.value} value={p.value}>
-                        {p.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Model</Label>
-                <Select
-                  value={llm_model}
-                  // @ts-ignore - this is a workaround for TypeScript not recognizing the dynamic value
-                  onValueChange={e => setModel(e.target.value)}
-                  disabled={loading || !llm_provider}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder={loading ? "Loading..." : "Select model"} />
-                  </SelectTrigger>
-                  {!loading && (
-                    <SelectContent>
-                      {MODELS[llm_provider].map((m) => (
-                        <SelectItem key={m} value={m}>
-                          {m}
-                        </SelectItem>
+                  {PROVIDERS.find(p => p.value === llm_provider)?.label}
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                </button>
+
+                {providerOpen && (
+                  <div className="absolute z-10 mt-2 w-44 rounded-lg shadow-lg bg-white/10 backdrop-blur-sm border border-white/20 transition-all duration-200">
+                    <ul className="py-2 text-sm text-white">
+                      {PROVIDERS.map((p) => (
+                        <li key={p.value}>
+                          <button
+                            onClick={() => {
+                              setProvider(p.value as keyof typeof MODELS);
+                              setModel(MODELS[p.value as keyof typeof MODELS][0]);
+                              setProviderOpen(false);
+                            }}
+                            className="flex items-center w-full text-left px-4 py-2 hover:bg-white/20 transition-all  duration-200"
+                          >
+                            <img src={p.icon} alt="" className="w-5 h-5 mr-2" />
+                            {p.label}
+                          </button>
+                        </li>
                       ))}
-                    </SelectContent>
-                  )}
-                </Select>
+                    </ul>
+                  </div>
+                )}
               </div>
+
+              {/* Model Dropdown */}
+              <div className="relative inline-block text-left">
+                <button
+                  type="button"
+                  onClick={() => setModelOpen((prev) => !prev)}
+                  className="text-white bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 focus:ring-2 focus:outline-none focus:ring-white/30 font-medium rounded-lg text-sm px-5 py-2.5 inline-flex items-center"
+                >
+                  {llm_model}
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                </button>
+
+                {modelOpen && (
+                  <div className="absolute z-10 mt-2 w-52 rounded-lg shadow-lg bg-white/10 backdrop-blur-md border border-white/20">
+                    <ul className="py-2 text-sm text-white">
+                      {MODELS[llm_provider].map((model) => (
+                        <li key={model}>
+                          <button
+                            onClick={() => {
+                              setModel(model);
+                              setModelOpen(false);
+                            }}
+                            className="block w-full text-left px-4 py-2 hover:bg-white/20"
+                          >
+                            {model}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+
               <div className="col-span-full relative">
                 <Label>API Key</Label>
                 <div className="relative mt-1">
@@ -322,13 +346,13 @@ export default function PlaygroundPage() {
             <CardTitle>🧪 Prompt Test Results</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {promptResults.map((r: any) => (
-              <div key={r.type} className="border rounded p-3 bg-muted/30">
-                <div className="font-semibold">{r.type}</div>
+            {promptResults.map((r : unknown) => (
+              <div key={(r as { type: string }).type} className="border rounded p-3 bg-muted/30">
+                <div className="font-semibold">{(r as { type: string }).type}</div>
                 <div className="text-xs text-muted-foreground mb-1">
-                  Prompt: {r.prompt}
+                  Prompt: {(r as { prompt: string }).prompt}
                 </div>
-                <div className="whitespace-pre-wrap text-sm">{r.response}</div>
+                <div className="whitespace-pre-wrap text-sm">{(r as { response: string }).response}</div>
               </div>
             ))}
           </CardContent>

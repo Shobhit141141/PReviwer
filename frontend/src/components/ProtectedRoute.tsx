@@ -1,10 +1,8 @@
-'use client';
-
+"use client";
 import { useAuth } from '@/contexts/AuthContext';
 import { Error } from './ui/error';
-import { Github, Loader2, Lock } from 'lucide-react';
+import { Github, Lock } from 'lucide-react';
 import { Button } from './ui/button';
-import { Skeleton } from './ui/skeleton';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -20,46 +18,46 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const { isLoading, isAuthenticated, error, login, clearError } = useAuth();
 
   if (isLoading) {
-    return (
-      <div className="flex min-h-screen w-full px-4 py-6">
-        <div className="w-full space-y-8">
+    return null
+      // <div className="flex min-h-screen w-full px-4 py-6">
+      //   <div className="w-full space-y-8">
 
-          {/* Stats Overview */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      //     {/* Stats Overview */}
+      //     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
 
-            {/* Avatar + Info Card */}
-            <Skeleton className="rounded-xl p-6 border border-gray-800 lg:col-span-2 lg:row-span-2 w-full max-sm:h-[200px]" />
+      //       {/* Avatar + Info Card */}
+      //       <Skeleton className="rounded-xl p-6 border border-gray-800 lg:col-span-2 lg:row-span-2 w-full max-sm:h-[200px]" />
 
-            {[1, 2, 3, 4].map((_, index) => (
-              <Skeleton
-                key={index}
-                className="rounded-xl p-6 border border-gray-800 w-full h-[120px] col-span-1"
-              />
-            ))}
-          </div>
+      //       {[1, 2, 3, 4].map((_, index) => (
+      //         <Skeleton
+      //           key={index}
+      //           className="rounded-xl p-6 border border-gray-800 w-full h-[120px] col-span-1"
+      //         />
+      //       ))}
+      //     </div>
 
-          {/* Bottom Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 w-full">
+      //     {/* Bottom Section */}
+      //     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 w-full">
 
-            {/* Left */}
-            <div className="space-y-6 lg:col-span-2">
-              <Skeleton className="rounded-xl border border-gray-800 p-6 h-[200px] w-full" />
-              <Skeleton className="rounded-xl border border-gray-800 p-6 h-[600px] w-full" />
-            </div>
+      //       {/* Left */}
+      //       <div className="space-y-6 lg:col-span-2">
+      //         <Skeleton className="rounded-xl border border-gray-800 p-6 h-[200px] w-full" />
+      //         <Skeleton className="rounded-xl border border-gray-800 p-6 h-[600px] w-full" />
+      //       </div>
 
-            {/* Right Sidebar */}
-            <div className="space-y-6">
-              <Skeleton className="rounded-xl border border-gray-800 p-6 h-[400px] w-full" />
-              <Skeleton className="rounded-xl border border-gray-800 p-6 h-[400px] w-full" />
-              <Skeleton className="rounded-xl border border-gray-800 p-6 h-[400px] w-full" />
-            </div>
-          </div>
-        </div>
-      </div>
+      //       {/* Right Sidebar */}
+      //       <div className="space-y-6">
+      //         <Skeleton className="rounded-xl border border-gray-800 p-6 h-[400px] w-full" />
+      //         <Skeleton className="rounded-xl border border-gray-800 p-6 h-[400px] w-full" />
+      //         <Skeleton className="rounded-xl border border-gray-800 p-6 h-[400px] w-full" />
+      //       </div>
+      //     </div>
+      //   </div>
+      // </div>
 
 
 
-    );
+    
   }
 
   if (error) {

@@ -4,6 +4,13 @@ export interface UserInfo {
   name: string;
   username: string;
   avatar: string;
+  bio?: string;
+  company?: string;
+  location?: string;
+  followers?: number;
+  following?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 declare global {

@@ -1,4 +1,12 @@
-export const MODELS_FOR_EVERY_PROVIDER = {
+export const PROVIDERS = [
+  { label: "OpenAI", value: "openai", icon :"/openai-icon.png" },
+  { label: "Anthropic", value: "anthropic", icon :"/anth-icon.png" },
+  { label: "Google", value: "google", icon :"/gemini-icon.png" },
+  { label: "Mistral", value: "mistral", icon :"/mistral-icon.svg" },
+  { label: "DeepSeek", value: "deepseek", icon :"/ds-icon.png" }
+];
+
+export const MODELS = {
   openai: [
     'gpt-4.1',
     'gpt-4.1-mini',

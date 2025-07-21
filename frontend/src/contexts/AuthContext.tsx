@@ -60,6 +60,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       // Clear local state
       api.removeAccessToken();
+      api.removeRefreshToken();
       setUser(null);
     } catch (error) {
       console.error('Logout error:', error);
@@ -108,8 +109,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           api.setAccessToken(refreshResponse.access_token);
           api.setRefreshToken(refreshResponse.refresh_token);
           await refreshUser();
-        } catch (refreshError) {
-          // Refresh failed, clear everything
+        } catch (refreshError ) {
+          console.warn('Token refresh failed:', refreshError);
+          setError('Session expired, please log in again.');
           api.removeAccessToken();
           setUser(null);
         }

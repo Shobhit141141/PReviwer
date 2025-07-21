@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { githubAuthMiddleware } from '../middlewares/verifyToken';
 import User from '../models/user.model';
+import { getGithubAnalytics } from '../controllers/user.controller';
 
 const router = Router();
 
@@ -24,4 +25,5 @@ router.get('/profile', githubAuthMiddleware, async (req, res): Promise<void> => 
   }
 });
 
+router.get('/analytics', githubAuthMiddleware, getGithubAnalytics);
 export default router;

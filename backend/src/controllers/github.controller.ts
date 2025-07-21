@@ -10,7 +10,14 @@ const CLIENT_SECRET = CONSTANTS.GITHUB_CLIENT_SECRET;
 const REDIRECT_URI = CONSTANTS.REDIRECT_URI;
 const FRONTEND_URL = CONSTANTS.FRONTEND_URL;
 
-export const githubLogin = (_req: Request, res: Response): void => {
+/** * GitHub OAuth login handler
+ * /github/login - PUBLIC
+ * This function redirects the user to GitHub's OAuth login page.
+ * @param req - Request object
+ * @param res - Response object to redirect to GitHub login
+ * @return { void } - Redirects to GitHub OAuth login page
+ */
+export const githubLogin = (_req: Request, res: Response) => {
   const githubAppAuthUrl =
     `https://github.com/login/oauth/authorize` +
     `?client_id=${CLIENT_ID}` +
@@ -21,7 +28,14 @@ export const githubLogin = (_req: Request, res: Response): void => {
   res.redirect(githubAppAuthUrl);
 };
 
-export const githubCallback = async (req: Request, res: Response): Promise<void> => {
+/** * GitHub OAuth callback handler
+ * /github/callback - PUBLIC
+ * This function handles the OAuth callback from GitHub, exchanges the code for tokens,
+ * and redirects to the frontend with user data.
+ * @param req - Request object containing the code from GitHub
+ * @param res - Response object to redirect to the frontend with user data
+ */
+export const githubCallback = async (req: Request, res: Response) => {
   const { code } = req.query;
   if (!code || typeof code !== 'string') {
     const errorUrl = `${FRONTEND_URL}?error=Code not found`;
@@ -59,7 +73,6 @@ export const githubCallback = async (req: Request, res: Response): Promise<void>
       email: userRes.data.email,
       githubId: userRes.data.id.toString(),
       github_refresh_token: encrypt(refresh_token),
-
     };
 
     let user = await User.findOne({
@@ -89,21 +102,31 @@ export const githubCallback = async (req: Request, res: Response): Promise<void>
   }
 };
 
-
-export const refreshAccessToken = async (req: Request, res: Response): Promise<void> => {
-  const refreshToken =
-  req.headers['x-refresh-token'];
+/** * Get weekly activity for a user
+ * /github/weekly-activity - PRIVATE
+ * This function fetches the user's contributions, pull requests, and repositories created in the last week.
+ * @param req - Request object containing user access token and username
+ * @param res - Response object to send the weekly activity data
+ * @return { dailySummary: Array of daily activity summaries for the last week }
+ */
+export const refreshAccessToken = async (req: Request, res: Response) => {
+  const refreshToken = req.headers['x-refresh-token'];
 
   if (!refreshToken) {
     res.status(401).json({ error: 'Refresh token missing' });
-    logError('Refresh token missing in request headers');
     return;
   }
 
   try {
-    // Find user by matching decrypted refresh token
-    const users = await User.find(); // You can optimize this lookup if needed
-    const user = users.find((u) => decrypt(u.github_refresh_token) === refreshToken);
+    // Find all users with a non-null github_refresh_token and compare decrypted tokens
+    const users = await User.find({ github_refresh_token: { $exists: true, $ne: null } });
+    let user = null;
+    for (const u of users) {
+      if (decrypt(u.github_refresh_token) === refreshToken) {
+        user = u;
+        break;
+      }
+    }
 
     if (!user) {
       res.status(403).json({ error: 'Invalid refresh token' });
@@ -121,7 +144,7 @@ export const refreshAccessToken = async (req: Request, res: Response): Promise<v
       },
       {
         headers: { Accept: 'application/json' },
-      }
+      },
     );
 
     const { access_token, refresh_token: newRefreshToken } = response.data;
@@ -131,13 +154,10 @@ export const refreshAccessToken = async (req: Request, res: Response): Promise<v
       return;
     }
 
-    if (newRefreshToken) {
-      user.github_refresh_token = encrypt(newRefreshToken);
-      await user.save();
-    }
-
     res.json({ access_token, refresh_token: newRefreshToken });
   } catch (err: any) {
+    console.error('Error refreshing GitHub token:', err?.response?.data || err);
+
     const msg = err?.response?.data?.error_description || 'Token refresh failed';
     if (msg.includes('expired') || msg.includes('invalid')) {
       res.status(403).json({ error: 'Session expired, please log in again' });
@@ -147,8 +167,14 @@ export const refreshAccessToken = async (req: Request, res: Response): Promise<v
   }
 };
 
-
-export const disconnectFromGitHub = async (req: Request, res: Response): Promise<void> => {
+/** * Disconnect the GitHub app from the user's account
+ * /github/disconnect - PRIVATE
+ * This function revokes the access token and disconnects the app from GitHub.
+ * @param req - Request object containing user access token
+ * @param res - Response object to send the disconnect status
+ * @return { message: string } - Success message if the app is disconnected
+ */
+export const disconnectFromGitHub = async (req: Request, res: Response) => {
   const accessToken = req.accessToken;
   try {
     if (accessToken) {
@@ -181,3 +207,4 @@ export const disconnectFromGitHub = async (req: Request, res: Response): Promise
     res.status(500).send('Failed to disconnect from GitHub');
   }
 };
+

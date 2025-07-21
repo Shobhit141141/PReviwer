@@ -1,9 +1,5 @@
 import mongoose from 'mongoose';
-import { CONSTANTS } from '../config/constants';
-import { encrypt } from '../utils/encrypt_decrypt';
 import { MODELS_FOR_EVERY_PROVIDER } from '../config/enums';
-
-
 
 const playgroundSchema = new mongoose.Schema({
   user: {

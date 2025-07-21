@@ -1,13 +1,11 @@
-'use client';
-
-import { UserStatsType } from "@/types";
-import { Bell, Github, Search, Settings, LogOut, User } from "lucide-react";
+"use client";
+import { Bell, Github, Settings, LogOut } from "lucide-react";
 import { Button } from "./ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loading } from "./ui/loading";
 import { Error } from "./ui/error";
 
-function Navbar({ userStats }: { userStats: UserStatsType }) {
+function Navbar() {
   const { user, isLoading, isAuthenticated, error, login, logout, clearError } = useAuth();
 
   const handleLogout = async () => {

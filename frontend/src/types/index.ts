@@ -1,7 +1,7 @@
 export type UserStatsType = {
   username: string;
   avatar: string;
-  totalRepos: number;
+  publicRepos: number;
   totalPRs: number;
   totalStars: number;
   followers: number;
@@ -9,9 +9,10 @@ export type UserStatsType = {
   bio: string;
   company: string;  
   location: string;
+  joinedOn: string;
 };
 
-export type ActivePRType = {
+export interface ActivePRType {
   id: string; 
   title: string;
   status: string;
@@ -24,7 +25,11 @@ export type ActivePRType = {
   deletions: number;
   labels: string[];
   reviewers: string[];
-}[];
+  creator: {
+    username: string;
+    avatar: string;
+  };
+}
 
 // Auth Types
 export interface User {

@@ -1,102 +1,22 @@
 "use client";
-import React, { useState } from 'react';
+import React from 'react';
 import {
   GitPullRequest,
   Users,
   Star,
   GitBranch,
-  Clock,
-  CheckCircle,
-  AlertCircle,
   GitCommit,
-  Calendar,
   TrendingUp,
-  Github,
-  Settings,
-  Bell,
-  Search,
-  Filter,
-  MoreHorizontal,
-  Eye,
-  MessageSquare,
-  Plus,
-  Minus
 } from 'lucide-react';
-import Navbar from '@/components/navbar';
 import ActivePullRequests from '@/components/activePullRequests';
 import UserStats from '@/components/userStats';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import WeeklyActivity from '@/components/weeklyActivity';
 
 const Dashboard = () => {
-  const { user, isLoading, isAuthenticated } = useAuth();
-  const [selectedTimeRange, setSelectedTimeRange] = useState('7d');
-  const [selectedRepo, setSelectedRepo] = useState('all');
+  const { isAuthenticated } = useAuth();
 
-  // Dummy data - in a real app, this would come from the authenticated user
-  const userStats = {
-    username: user?.username || "john_dev",
-    avatar: user?.avatar || "https://avatars.githubusercontent.com/u/122107079?v=4",
-    totalRepos: 24,
-    totalPRs: 156,
-    totalStars: 1247,
-    followers: 89,
-    following: 143,
-    bio: user?.bio || "Full Stack Developer with a passion for open source.",
-    company: "Tech Innovations",
-    location: "San Francisco, CA"
-  };
-
-  const activePRs = [
-    {
-      id: "1",
-      title: "Fix authentication middleware bug",
-      repo: "web-app",
-      author: "john_dev",
-      number: 142,
-      status: "open",
-      created: "2 hours ago",
-      updated: "30 minutes ago",
-      comments: 3,
-      reviewers: ["alice_dev", "bob_coder"],
-      labels: ["bug", "priority-high"],
-      additions: 45,
-      deletions: 12,
-      commits: 4
-    },
-    {
-      id: "2",
-      title: "Add dark mode toggle component",
-      repo: "ui-components",
-      author: "alice_dev",
-      number: 87,
-      status: "draft",
-      created: "1 day ago",
-      updated: "4 hours ago",
-      comments: 8,
-      reviewers: ["john_dev"],
-      labels: ["feature", "ui"],
-      additions: 234,
-      deletions: 23,
-      commits: 12
-    },
-    {
-      id: "3",
-      title: "Update API documentation",
-      repo: "api-server",
-      author: "bob_coder",
-      number: 203,
-      status: "ready",
-      created: "3 days ago",
-      updated: "1 hour ago",
-      comments: 15,
-      reviewers: ["john_dev", "alice_dev"],
-      labels: ["documentation"],
-      additions: 156,
-      deletions: 67,
-      commits: 8
-    }
-  ];
 
   const repoStats = [
     {
@@ -128,37 +48,9 @@ const Dashboard = () => {
     }
   ];
 
-  const weeklyActivity = [
-    { day: 'Mon', commits: 12, prs: 3 },
-    { day: 'Tue', commits: 8, prs: 2 },
-    { day: 'Wed', commits: 15, prs: 4 },
-    { day: 'Thu', commits: 6, prs: 1 },
-    { day: 'Fri', commits: 20, prs: 5 },
-    { day: 'Sat', commits: 4, prs: 1 },
-    { day: 'Sun', commits: 7, prs: 2 }
-  ];
-
-  interface PR {
-    id: number;
-    title: string;
-    repo: string;
-    author: string;
-    number: number;
-    status: 'open' | 'draft' | 'ready' | string;
-    created: string;
-    updated: string;
-    comments: number;
-    reviewers: string[];
-    labels: string[];
-    additions: number;
-    deletions: number;
-    commits: number;
-  }
-
-
-
   return (
-    <div className="h-screen text-white overflow-y-auto relative bg-gray-900">
+    <div className="min-h-screen text-white relative bg-gray-900">
+
       <div className="fixed pointer-events-none top-[10%] left-[5%] w-[400px] h-[400px] bg-purple-500 rounded-full blur-[160px] opacity-50"></div>
       <div className="fixed pointer-events-none top-[20%] right-[5%] w-[300px] h-[300px] bg-pink-500 rounded-full blur-[140px] opacity-35"></div>
       <div className="fixed pointer-events-none bottom-[15%] left-[20%] w-[350px] h-[350px] bg-blue-500 rounded-full blur-[150px] opacity-30"></div>
@@ -166,7 +58,7 @@ const Dashboard = () => {
       <div className="fixed pointer-events-none top-[40%] left-[40%] w-[300px] h-[300px] bg-indigo-500 rounded-full blur-[120px] opacity-25"></div>
 
       {/* Header */}
-      <Navbar userStats={userStats} />
+
 
       <div className="container mx-auto px-6 py-8">
         <ProtectedRoute requireAuth={false}>
@@ -176,9 +68,6 @@ const Dashboard = () => {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Active Pull Requests */}
                 <ActivePullRequests
-                  activePRs={activePRs}
-                  selectedRepo={selectedRepo}
-                  setSelectedRepo={setSelectedRepo}
                 />
 
                 {/* Repository Stats */}
@@ -221,34 +110,7 @@ const Dashboard = () => {
                   </div>
 
                   {/* Weekly Activity */}
-                  <div className=" rounded-xl border border-gray-800" id='glassmorphism'>
-                    <div className="p-6 border-b border-gray-800">
-                      <h2 className="text-xl font-semibold">Weekly Activity</h2>
-                    </div>
-                    <div className="p-6">
-                      <div className="grid grid-cols-7 gap-2">
-                        {weeklyActivity.map((day) => (
-                          <div key={day.day} className="text-center">
-                            <div className="text-xs text-gray-400 mb-2">{day.day}</div>
-                            <div className="space-y-1">
-                              <div className="h-2 bg-blue-500 rounded" style={{ height: `${day.commits * 2}px` }}></div>
-                              <div className="h-2 bg-green-500 rounded" style={{ height: `${day.prs * 4}px` }}></div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="flex items-center justify-center space-x-4 mt-4 text-sm">
-                        <div className="flex items-center space-x-1">
-                          <div className="w-3 h-3 bg-blue-500 rounded"></div>
-                          <span>Commits</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <div className="w-3 h-3 bg-green-500 rounded"></div>
-                          <span>PRs</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <WeeklyActivity />
 
                   {/* Recent Activity */}
                   <div className="space-y-8">

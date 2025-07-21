@@ -4,6 +4,14 @@ import { testLLMConnection } from '../utils/llmTest';
 import { PR_TEMPLATES } from '../data/prTemplates';
 import { decrypt, encrypt } from '../utils/encrypt_decrypt';
 
+/**
+ * Configure the LLM model and system prompts for the playground
+ * /playground/configure - PRIVATE
+ * This function saves the user's LLM configuration and system prompts.
+ * @param req - Request object containing user configuration data
+ * @param res - Response object to send the configuration result
+ * @returns { message: 'Model configured successfully', data: savedConfig }
+ */
 export const configureModel = async (req: Request, res: Response): Promise<void> => {
   try {
     const { llm_provider, llm_model, llm_api_key, system_prompt, secondary_system_prompt } = req.body;
@@ -19,7 +27,6 @@ export const configureModel = async (req: Request, res: Response): Promise<void>
       secondary_system_prompt
     };
 
-    // Update or create the user's playground configuration
     const savedConfig = await Playground.findOneAndUpdate(
       { user: req.user.id },
       { $set: configData, $setOnInsert: { user: req.user.id } },
@@ -31,7 +38,14 @@ export const configureModel = async (req: Request, res: Response): Promise<void>
   }
 };
 
-
+/**
+ * Test the LLM model connection with the provided configuration
+ * /playground/test-connection - PRIVATE
+ * This function tests the LLM connection using the provided configuration.
+ * @param req - Request object containing LLM configuration data
+ * @param res - Response object to send the test result
+ * @returns { success: true, response: testResponse }
+ */
 export const testModelConnection = async (req: Request, res: Response): Promise<void> => {
   const { llm_provider, llm_model, llm_api_key } = req.body;
   try {
@@ -42,6 +56,14 @@ export const testModelConnection = async (req: Request, res: Response): Promise<
   }
 };
 
+/**
+ * Test the system prompt with the LLM model
+ * /playground/test-system-prompt - PRIVATE
+ * This function tests the system prompt with the configured LLM model.
+ * @param req - Request object containing system prompt and LLM configuration
+ * @param res - Response object to send the test results
+ * @returns { results: Array<{ type: string, prompt: string, response: string }> }
+ */
 export const testSystemPrompt = async (req: Request, res: Response): Promise<void> => {
   const { system_prompt, llm_provider, llm_model, llm_api_key } = req.body;
   try {
@@ -59,6 +81,14 @@ export const testSystemPrompt = async (req: Request, res: Response): Promise<voi
   }
 };
 
+/**
+ * AB test two system prompts with the LLM model
+ * /playground/ab-test - PRIVATE
+ * This function tests two system prompts with the configured LLM model.
+ * @param req - Request object containing system prompts and LLM configuration
+ * @param res - Response object to send the AB test results
+ * @returns { input: string, primary: string, secondary: string }
+ */
 export const abTestPrompts = async (req: Request, res: Response): Promise<void> => {
   const {
     system_prompt,
@@ -85,6 +115,14 @@ export const abTestPrompts = async (req: Request, res: Response): Promise<void> 
   }
 };
 
+/**
+ * Save the system prompts for the user
+ * /playground/save-prompts - PRIVATE
+ * This function saves the user's system prompts to the database.
+ * @param req - Request object containing system prompts
+ * @param res - Response object to send the save result
+ * @returns { message: 'Prompts updated', data: updatedConfig }
+ */
 export const savePrompts = async (req: Request, res: Response): Promise<void> => {
   const { system_prompt, secondary_system_prompt } = req.body;
 
@@ -104,6 +142,14 @@ export const savePrompts = async (req: Request, res: Response): Promise<void> =>
   }
 };
 
+/**
+ * Get the user's playground configuration
+ * /playground/config - PRIVATE
+ * This function retrieves the user's playground configuration from the database.
+ * @param req - Request object containing user information
+ * @param res - Response object to send the configuration data
+ * @returns { data: PlaygroundConfig }
+ */
 export const getPlaygroundConfig = async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.user || !req.user.id) {
