@@ -3,6 +3,7 @@ import { RepoStats } from "@/types";
 import { GitBranch, GitPullRequest, Star, Users, Code2, ActivitySquare } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Skeleton } from "./ui/skeleton";
+import { formatDate } from "@/utils/formatDate";
 
 function TopRepos() {
   const [repoStats, setRepoStats] = useState<RepoStats[] | null>(null);
@@ -25,11 +26,7 @@ function TopRepos() {
     fetchTopRepos();
   }, []);
 
-  const formatDate = (isoString: string) => {
-    const date = new Date(isoString);
-    return date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
-  };
-
+ 
   if (loading) return (
     <Skeleton className="h-124 w-full rounded-xl" />
 

@@ -4,6 +4,7 @@ import { UserStatsType } from '@/types';
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { Skeleton } from './ui/skeleton';
+import { formatDate } from '@/utils/formatDate';
 
 function UserStats() {
 
@@ -100,7 +101,7 @@ function UserStats() {
                         <div>
                             <p className="text-gray-400 text-sm">Joined On</p>
                             <p className="text-lg font-bold text-yellow-400">
-                                {userStats?.joinedOn ? new Date(userStats.joinedOn).toLocaleDateString() : ''}
+                                {formatDate(userStats?.joinedOn || '')}
                             </p>
                         </div>
                         <Calendar1 className="w-8 h-8 text-yellow-400" />
