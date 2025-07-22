@@ -7,13 +7,13 @@ export type UserStatsType = {
   followers: number;
   following: number;
   bio: string;
-  company: string;  
+  company: string;
   location: string;
   joinedOn: string;
 };
 
 export interface ActivePRType {
-  id: string; 
+  id: string;
   title: string;
   status: string;
   number: number;
@@ -29,6 +29,18 @@ export interface ActivePRType {
     username: string;
     avatar: string;
   };
+}
+
+export interface RepoStats {
+  name: string;
+  stars: number;
+  forks: number;
+  openPRs: number;
+  commits: number;
+  language: string | null;
+  lastCommit: string;
+  contributors: number;
+  score: number;
 }
 
 // Auth Types

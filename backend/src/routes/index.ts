@@ -2,7 +2,7 @@ import { Express } from 'express';
 import { handleResponse } from '../utils/responseHandler';
 import githubRoutes from './github.routes';
 import userRoutes from './user.routes';
-import playgroundRouter from './playground.router';
+import playgroundRouter from './playground.route';
 import { githubAuthMiddleware } from '../middlewares/verifyToken';
 
 const registerRoutes = (app: Express): void => {

@@ -13,41 +13,10 @@ import UserStats from '@/components/userStats';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import WeeklyActivity from '@/components/weeklyActivity';
+import TopRepos from '@/components/topRepos';
 
 const Dashboard = () => {
   const { isAuthenticated } = useAuth();
-
-
-  const repoStats = [
-    {
-      name: "web-app",
-      stars: 342,
-      forks: 89,
-      openPRs: 12,
-      language: "TypeScript",
-      lastCommit: "2 hours ago",
-      contributors: 8
-    },
-    {
-      name: "ui-components",
-      stars: 567,
-      forks: 143,
-      openPRs: 5,
-      language: "React",
-      lastCommit: "1 day ago",
-      contributors: 12
-    },
-    {
-      name: "api-server",
-      stars: 234,
-      forks: 67,
-      openPRs: 8,
-      language: "Node.js",
-      lastCommit: "3 hours ago",
-      contributors: 6
-    }
-  ];
-
   return (
     <div className="min-h-screen text-white relative bg-gray-900">
 
@@ -74,40 +43,7 @@ const Dashboard = () => {
                 <div className="space-y-8">
                   
                   {/* Top Repositories */}
-                  <div className=" rounded-xl border border-gray-800" id='glassmorphism'>
-                    <div className="p-6 border-b border-gray-800">
-                      <h2 className="text-xl font-semibold">Top Repositories</h2>
-                    </div>
-                    <div className="divide-y divide-gray-800">
-                      {repoStats.map((repo) => (
-                        <div key={repo.name} className="p-6 hover:bg-gray-800/50 transition-colors">
-                          <div className="flex items-center justify-between mb-3">
-                            <h3 className="font-medium text-blue-400 cursor-pointer hover:text-blue-300">
-                              {repo.name}
-                            </h3>
-                            <div className="flex items-center space-x-2 text-sm text-gray-400">
-                              <Star className="w-4 h-4" />
-                              <span>{repo.stars}</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between text-sm text-gray-400">
-                            <div className="flex items-center space-x-4">
-                              <span className="flex items-center space-x-1">
-                                <GitBranch className="w-4 h-4" />
-                                <span>{repo.forks}</span>
-                              </span>
-                              <span className="flex items-center space-x-1">
-                                <GitPullRequest className="w-4 h-4" />
-                                <span>{repo.openPRs}</span>
-                              </span>
-                              <span className="text-blue-400">{repo.language}</span>
-                            </div>
-                            <span className="text-xs">{repo.lastCommit}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  <TopRepos />
 
                   {/* Weekly Activity */}
                   <WeeklyActivity />

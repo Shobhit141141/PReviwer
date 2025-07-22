@@ -299,6 +299,19 @@ export const githubApi = {
     });
     return handleResponse(response);
   },
+
+  getTopRepos : async () => {
+    const token = api.getAccessToken();
+    if (!token) throw new ApiError('No access token found', 401);
+    const response = await fetch(`${API_BASE_URL}/api/github/top-repos`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return handleResponse(response);
+  }
 };
 
 export { ApiError };
