@@ -96,7 +96,7 @@ export const githubCallback = async (req: Request, res: Response) => {
     const successUrl = `${FRONTEND_URL}?user=${userDataEncoded}&token=${access_token}&refresh_token=${refresh_token}&expires_in=${expires_in}&refresh_token_expires_in=${refresh_token_expires_in}&isFirstTime=${isFirstTime}`;
     res.redirect(successUrl);
   } catch (err: any) {
-    console.error(err.response?.data || err.message);
+    logError('GitHub OAuth callback error:', err);
     const errorUrl = `${FRONTEND_URL}?error=GitHub Auth failed`;
     res.redirect(errorUrl);
   }
@@ -156,7 +156,7 @@ export const refreshAccessToken = async (req: Request, res: Response) => {
 
     res.json({ access_token, refresh_token: newRefreshToken });
   } catch (err: any) {
-    console.error('Error refreshing GitHub token:', err?.response?.data || err);
+    logError('Error refreshing GitHub token:', err);
 
     const msg = err?.response?.data?.error_description || 'Token refresh failed';
     if (msg.includes('expired') || msg.includes('invalid')) {
@@ -208,3 +208,38 @@ export const disconnectFromGitHub = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * Get recent activity controller
+ * /github/recent-activity - PRIVATE
+ * This controller handles the request to get user's recent GitHub activity.
+ * @param req - Request object containing user access token and username
+ * @param res - Response object to send the recent activity data
+ */
+export const getRecentActivityController = async (req: Request, res: Response) => {
+  try {
+    // Import the service function dynamically to avoid circular imports
+    const { getRecentActivity } = await import('../services/github.service');
+    await getRecentActivity(req, res);
+  } catch (error: any) {
+    logError('Error in recent activity controller:', error);
+    res.status(500).json({ error: 'Failed to fetch recent activity', details: error.message });
+  }
+};
+
+/**
+ * Get PR details controller
+ * /github/pr-details/:owner/:repo/:prNumber - PRIVATE
+ * This controller handles the request to get detailed information about a specific PR.
+ * @param req - Request object containing user access token and PR parameters
+ * @param res - Response object to send the PR details data
+ */
+export const getPRDetailsController = async (req: Request, res: Response) => {
+  try {
+    // Import the service function dynamically to avoid circular imports
+    const { getPRDetails } = await import('../services/github.service');
+    await getPRDetails(req, res);
+  } catch (error: any) {
+    logError('Error in PR details controller:', error);
+    res.status(500).json({ error: 'Failed to fetch PR details', details: error.message });
+  }
+};

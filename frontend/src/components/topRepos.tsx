@@ -33,7 +33,7 @@ function TopRepos() {
   );
 
   return (
-    <div className="rounded-xl border border-gray-800" id="glassmorphism">
+    <div className="rounded-xl border border-gray-800 " id="glassmorphism">
       <div className="p-6 border-b border-gray-800">
         <h2 className="text-xl font-semibold">Top Repositories</h2>
       </div>

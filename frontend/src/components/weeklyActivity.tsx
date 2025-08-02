@@ -17,9 +17,8 @@ function WeeklyActivity() {
   const fetchWeeklyActivity = async () => {
     try {
       const response = await githubApi.getWeeklyActivity();
-      console.log("Weekly Activity Response:", response);
       setDailySummary(response.dailySummary);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error fetching weekly activity:", error);
     } finally {
       setLoading(false);

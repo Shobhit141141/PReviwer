@@ -15,7 +15,6 @@ export const getActivePullRequests = async (req: Request, res: Response) => {
   const accessToken = req.accessToken;
   const username = req.user?.username;
 
-  logDebug('Fetching active PRs for user:', username);
   if (!accessToken || !username) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
@@ -194,7 +193,7 @@ export const getWeeklyActivity = async (req: Request, res: Response) => {
 
     res.json({ dailySummary });
   } catch (err: any) {
-    console.error(err);
+    logError('Error fetching weekly activity:', err);
     res.status(500).json({
       error: 'Failed to fetch GitHub weekly activity',
       details: err.message,
@@ -211,23 +210,22 @@ export const getWeeklyActivity = async (req: Request, res: Response) => {
  * @returns { Array of repository statistics with details }
  */
 
-
 export const getRepoStats = async (req: Request, res: Response) => {
   const accessToken = req.accessToken;
   const username = req.user?.username as string;
 
   if (!username) {
-    res.status(400).json({ error: "Missing GitHub username" });
+    res.status(400).json({ error: 'Missing GitHub username' });
     return;
   }
 
   try {
-        const octokit = new Octokit({ auth: accessToken });
+    const octokit = new Octokit({ auth: accessToken });
 
     const { data: repos } = await octokit.rest.repos.listForUser({
       username,
       per_page: 100,
-      sort: "updated",
+      sort: 'updated',
     });
 
     const repoStats = await Promise.all(
@@ -237,7 +235,7 @@ export const getRepoStats = async (req: Request, res: Response) => {
             octokit.rest.pulls.list({
               owner: username,
               repo: repo.name,
-              state: "open",
+              state: 'open',
               per_page: 100,
             }),
 
@@ -257,7 +255,7 @@ export const getRepoStats = async (req: Request, res: Response) => {
             octokit.rest.repos.getCommit({
               owner: username,
               repo: repo.name,
-              ref: repo.default_branch ?? "main",
+              ref: repo.default_branch ?? 'main',
             }),
           ]);
 
@@ -270,17 +268,15 @@ export const getRepoStats = async (req: Request, res: Response) => {
             openPRs: prs.data.length,
             commits: commitCount,
             language: repo.language,
-            lastCommit: new Date(
-              lastCommit.data.commit.author?.date || ""
-            ),
+            lastCommit: new Date(lastCommit.data.commit.author?.date || ''),
             contributors: contributors.data.length,
             score: commitCount + 10 * (repo.stargazers_count ?? 0) + 5 * prs.data.length,
           };
-        } catch (err) {
-          console.error(`Error processing repo ${repo.name}:`, err);
+        } catch (err: any) {
+          logError(`Error processing repo ${repo.name}:`, err);
           return null;
         }
-      })
+      }),
     );
 
     const filtered = repoStats
@@ -289,8 +285,289 @@ export const getRepoStats = async (req: Request, res: Response) => {
       .slice(0, 3);
 
     res.json(filtered);
-  } catch (error) {
-    console.error("GitHub API error:", error);
-    res.status(500).json({ error: "Failed to fetch repository stats" });
+  } catch (error: any) {
+    logError('GitHub API error:', error);
+    res.status(500).json({ error: 'Failed to fetch repository stats' });
+  }
+};
+
+/**
+ * Get recent GitHub activity for the authenticated user
+ * /github/recent-activity - PRIVATE
+ * This function fetches the recent 3 activities (events) for the user with relevant details.
+ * @param req - Request object containing user access token and username
+ * @param res - Response object to send the recent activity data
+ * @returns { Array of recent activity details }
+ */
+export const getRecentActivity = async (req: Request, res: Response) => {
+  const accessToken = req.accessToken;
+  const username = req.user?.username;
+
+  if (!accessToken || !username) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  try {
+    const octokit = new Octokit({ auth: accessToken });
+
+    // Get user's recent events
+    const { data: events } = await octokit.rest.activity.listEventsForAuthenticatedUser({
+      username,
+      per_page: 10,
+    });
+
+    // Pick the top 3 meaningful events with details
+    const recentActivities = events
+      .slice(0, 10)
+      .filter(
+        (e) =>
+          e.type === 'PushEvent' ||
+          e.type === 'PullRequestEvent' ||
+          e.type === 'IssuesEvent' ||
+          e.type === 'CreateEvent',
+      )
+      .slice(0, 3)
+      .map((event) => {
+        const base = {
+          id: event.id,
+          type: event.type,
+          repo: event.repo.name,
+          created_at: event.created_at,
+        };
+
+        switch (event.type) {
+          case 'PushEvent':
+            return {
+              ...base,
+              action: `Pushed ${(event.payload as any).commits?.length || 0} commit(s)`,
+              branch: (event.payload as any).ref?.replace('refs/heads/', ''),
+              commits: (event.payload as any).commits?.map((c: any) => ({
+                message: c.message,
+                url: c.url,
+              })),
+            };
+
+          case 'PullRequestEvent': {
+            const payload = event.payload as {
+              action?: string;
+              pull_request?: {
+                number?: number;
+                title?: string;
+                html_url?: string;
+              };
+            };
+            return {
+              ...base,
+              action: `${payload.action} pull request #${payload.pull_request?.number}`,
+              title: payload.pull_request?.title,
+              url: payload.pull_request?.html_url,
+            };
+          }
+
+          case 'IssuesEvent':
+            return {
+              ...base,
+              action: `${event.payload.action} issue #${event.payload.issue?.number}`,
+              title: event.payload.issue?.title,
+              url: event.payload.issue?.html_url,
+            };
+
+          case 'CreateEvent': {
+            const payload = event.payload as { ref_type?: string; ref?: string };
+            return {
+              ...base,
+              action: `Created ${payload.ref_type} ${payload.ref || ''}`,
+            };
+          }
+
+          default:
+            return base;
+        }
+      });
+
+    res.status(200).json({ recentActivities });
+  } catch (err: any) {
+    logError('Error fetching recent activity:', err);
+    res.status(500).json({ error: 'Failed to fetch recent activity', details: err.message });
+  }
+};
+
+/**
+ * Get pull request details for a specific PR
+ * /github/pr-details/:owner/:repo/:prNumber - PRIVATE
+ * This function fetches detailed information about a specific pull request.
+ * @param req - Request object containing user access token, owner, repo, and PR number
+ * @param res - Response object to send the PR details data
+ * @returns { Detailed PR information including stats, files, commits, and merge status }
+ */
+export const getPRDetails = async (req: Request, res: Response) => {
+  const accessToken = req.accessToken;
+  const { owner, repo, prNumber } = req.params;
+  if (!owner || !repo || !prNumber) {
+    res.status(400).json({ error: 'Missing required parameters: owner, repo, or prNumber' });
+    return;
+  }
+
+  try {
+    const octokit = new Octokit({ auth: accessToken });
+    // Fetch PR details
+    const { data: prData } = await octokit.rest.pulls.get({
+      owner,
+      repo,
+      pull_number: parseInt(prNumber),
+    });
+    // Fetch PR commits
+    const { data: commits } = await octokit.rest.pulls.listCommits({
+      owner,
+      repo,
+      pull_number: parseInt(prNumber),
+    });
+
+    // Fetch PR files
+    const { data: files } = await octokit.rest.pulls.listFiles({
+      owner,
+      repo,
+      pull_number: parseInt(prNumber),
+    });
+
+    // Fetch PR reviews
+    const { data: reviews } = await octokit.rest.pulls.listReviews({
+      owner,
+      repo,
+      pull_number: parseInt(prNumber),
+    });
+
+    // Fetch PR comments
+    const { data: comments } = await octokit.rest.pulls.listReviewComments({
+      owner,
+      repo,
+      pull_number: parseInt(prNumber),
+    });
+
+    // Get issue comments (general PR comments)
+    const { data: issueComments } = await octokit.rest.issues.listComments({
+      owner,
+      repo,
+      issue_number: parseInt(prNumber),
+    });
+
+    // Calculate statistics
+    const totalComments = comments.length + issueComments.length;
+    const additions = files.reduce((sum, file) => sum + file.additions, 0);
+    const deletions = files.reduce((sum, file) => sum + file.deletions, 0);
+    const changedFiles = files.length;
+
+    // Get reviewers from reviews and requested reviewers
+    const reviewers = [
+      ...(prData.requested_reviewers?.map((reviewer) => ({
+        login: reviewer.login,
+        avatar_url: reviewer.avatar_url,
+        name: reviewer.name || reviewer.login,
+        type: 'requested',
+      })) || []),
+      ...reviews
+        .filter(
+          (review, index, self) =>
+            self.findIndex((r) => r.user?.login === review.user?.login) === index,
+        )
+        .map((review) => ({
+          login: review.user?.login || '',
+          avatar_url: review.user?.avatar_url || '',
+          name: review.user?.name || review.user?.login || '',
+          type: 'reviewed',
+        })),
+    ];
+
+    // Format the response
+    const prDetails = {
+      id: prData.id.toString(),
+      number: prData.number,
+      title: prData.title,
+      description: prData.body || '',
+      state: prData.state,
+      author: {
+        login: prData.user?.login || '',
+        avatar_url: prData.user?.avatar_url || '',
+        name: prData.user?.name || prData.user?.login || '',
+      },
+      assignees:
+        prData.assignees?.map((assignee) => ({
+          login: assignee.login,
+          avatar_url: assignee.avatar_url,
+          name: assignee.name || assignee.login,
+        })) || [],
+      reviewers: reviewers,
+      labels:
+        prData.labels?.map((label) => ({
+          name: typeof label === 'string' ? label : label.name,
+          color: typeof label === 'string' ? 'cccccc' : label.color,
+        })) || [],
+      created_at: prData.created_at,
+      updated_at: prData.updated_at,
+      merged_at: prData.merged_at,
+      base: {
+        ref: prData.base.ref,
+        repo: {
+          name: prData.base.repo.name,
+          full_name: prData.base.repo.full_name,
+        },
+      },
+      head: {
+        ref: prData.head.ref,
+        repo: {
+          name: prData.head.repo?.name || '',
+          full_name: prData.head.repo?.full_name || '',
+        },
+      },
+      stats: {
+        commits: commits.length,
+        additions,
+        deletions,
+        changed_files: changedFiles,
+        comments: totalComments,
+      },
+      mergeable: prData.mergeable,
+      merge_conflict: prData.mergeable === false,
+      draft: prData.draft,
+      can_merge: prData.mergeable !== false,
+      merge_status:
+        prData.mergeable === true ? 'clean' : prData.mergeable === false ? 'conflicts' : 'unknown',
+      files: files.map((file) => ({
+        filename: file.filename,
+        status: file.status,
+        additions: file.additions,
+        deletions: file.deletions,
+        changes: file.changes,
+        patch: file.patch,
+      })),
+      commits: commits.map((commit) => ({
+        sha: commit.sha,
+        message: commit.commit.message,
+        author: {
+          login: commit.author?.login || commit.commit.author?.name || '',
+          avatar_url: commit.author?.avatar_url || '',
+          name: commit.commit.author?.name || '',
+        },
+        date: commit.commit.author?.date || commit.commit.committer?.date || '',
+        url: commit.html_url,
+      })),
+      reviews: reviews.map((review) => ({
+        id: review.id,
+        state: review.state,
+        body: review.body,
+        user: {
+          login: review.user?.login || '',
+          avatar_url: review.user?.avatar_url || '',
+          name: review.user?.name || review.user?.login || '',
+        },
+        submitted_at: review.submitted_at,
+      })),
+    };
+
+    res.status(200).json(prDetails);
+  } catch (err: any) {
+    // logError('Error fetching PR details:', err);
+    res.status(500).json({ error: 'Failed to fetch PR details', details: err.message });
   }
 };

@@ -2,6 +2,13 @@
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
+.demo-variable {
+  color: #9333ea; /* Tailwind's purple-600 */
+  font-weight: bold;
+  background-color: #f3e8ff; /* light purple background */
+  padding: 1px 4px;
+  border-radius: 4px;
+}
 
 @theme inline {
   --color-background: var(--background);

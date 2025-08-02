@@ -14,7 +14,7 @@ type TestLLMOptions = {
 const testCache = new Map<string, string>();
 const MAX_TOKENS = 300;
 
-export async function testLLMConnection({
+export async function useLLMConnection({
   llm_provider,
   llm_model,
   llm_api_key,
@@ -73,15 +73,18 @@ export async function testLLMConnection({
       logInfo(`Using Google model: ${llm_model}`);
       const genModel = genAI.getGenerativeModel({ model: llm_model });
 
-     const result = await genModel.generateContent({
-      contents: [{ role: 'user', parts: [{ text: user_input }] }],
-      generationConfig: {
-        maxOutputTokens: MAX_TOKENS,
-        temperature: 0.7,
-      },
-    });
+      const result = await genModel.generateContent({
+        contents: [{ role: 'user', parts: [{ text: user_input }] }],
+        generationConfig: {
+          maxOutputTokens: MAX_TOKENS,
+          temperature: 0.7,
+        },
+      });
 
-      const text = typeof result.response.text === 'function' ? result.response.text() : result.response.text || 'No response.';
+      const text =
+        typeof result.response.text === 'function'
+          ? result.response.text()
+          : result.response.text || 'No response.';
       testCache.set(cacheKey, text);
       return text;
     }

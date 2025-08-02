@@ -11,7 +11,7 @@ export default function PlaygroundCard() {
         router.push('/playground');
     };
     return (
-        <Card className="w-full mx-auto shadow-xl border-muted/40 mb-4 bg-gradient-to-br from-pink-700/60 via-fuchsia-500/60 to-cyan-700/60">
+        <Card className="lg:col-span-2 w-full mx-auto shadow-xl border-muted/40 bg-gradient-to-br from-pink-700/60 via-fuchsia-500/60 to-cyan-700/60">
             <CardHeader className="flex flex-row items-center justify-between">
                 <div className="flex items-center space-x-2">
                     <CardTitle className="text-2xl font-bold flex items-center gap-2">

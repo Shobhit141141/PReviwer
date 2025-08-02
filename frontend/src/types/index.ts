@@ -43,6 +43,104 @@ export interface RepoStats {
   score: number;
 }
 
+export interface RecentActivityType {
+  id: string;
+  type: string;
+  repo: string;
+  created_at: string;
+  action: string;
+  title?: string;
+  commits?: { message: string; url: string }[];
+  url?: string;
+}
+
+export interface PRDetailsType {
+  id: string;
+  number: number;
+  title: string;
+  description: string;
+  state: "open" | "closed" | "merged";
+  author: {
+    login: string;
+    avatar_url: string;
+    name: string;
+  };
+  assignees: {
+    login: string;
+    avatar_url: string;
+    name: string;
+  }[];
+  reviewers: {
+    login: string;
+    avatar_url: string;
+    name: string;
+    type: "requested" | "reviewed";
+  }[];
+  labels: {
+    name: string;
+    color: string;
+  }[];
+  created_at: string;
+  updated_at: string;
+  merged_at: string | null;
+  base: {
+    ref: string;
+    repo: {
+      name: string;
+      full_name: string;
+    };
+  };
+  head: {
+    ref: string;
+    repo: {
+      name: string;
+      full_name: string;
+    };
+  };
+  stats: {
+    commits: number;
+    additions: number;
+    deletions: number;
+    changed_files: number;
+    comments: number;
+  };
+  mergeable: boolean | null;
+  merge_conflict: boolean;
+  draft: boolean;
+  can_merge: boolean;
+  merge_status: "clean" | "conflicts" | "unknown";
+  files: {
+    filename: string;
+    status: string;
+    additions: number;
+    deletions: number;
+    changes: number;
+    patch?: string;
+  }[];
+  commits: {
+    sha: string;
+    message: string;
+    author: {
+      login: string;
+      avatar_url: string;
+      name: string;
+    };
+    date: string;
+    url: string;
+  }[];
+  reviews: {
+    id: number;
+    state: string;
+    body: string | null;
+    user: {
+      login: string;
+      avatar_url: string;
+      name: string;
+    };
+    submitted_at: string | null;
+  }[];
+}
+
 // Auth Types
 export interface User {
   _id: string;

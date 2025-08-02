@@ -1,10 +1,11 @@
 import { ActivePRType } from "@/types";
 import { AlertCircle, CheckCircle, Clock, Filter, GitCommit, GitPullRequest, Loader, MessageSquare, Minus, MoreHorizontal, Plus } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import PlaygroundCard from "./playgroundCard";
 import { githubApi } from "@/lib/api";
 import { useEffect, useState } from "react";
 import { Skeleton } from "./ui/skeleton";
+import { useAuth } from "@/contexts/AuthContext";
+import Link from "next/link";
 
 interface StatusColorMap {
   [key: string]: string;
@@ -33,6 +34,7 @@ function ActivePullRequests() {
     }
   };
 
+  const { user } = useAuth();
   const [activePRs, setActivePRs] = useState<ActivePRType[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [repos, setRepos] = useState<string[]>([]);
@@ -56,8 +58,8 @@ function ActivePullRequests() {
 
   if (loading) {
     return (
-      <div className="lg:col-span-2 text-center text-gray-200 ">
-        <PlaygroundCard />
+      <div className="text-center text-gray-200">
+        {/* <PlaygroundCard /> */}
 
         <Skeleton className="h-64 w-full rounded-lg border border-gray-800 p-6 flex items-center justify-center">
           <Loader className="animate-spin mr-2" />Crunching active pull requests...
@@ -67,7 +69,7 @@ function ActivePullRequests() {
   }
   return (
     <div className="lg:col-span-2" >
-      <PlaygroundCard />
+      {/* <PlaygroundCard /> */}
       <div className="rounded-xl border border-gray-800" id="glassmorphism">
         <div className="p-6 border-b border-gray-800">
           <div className="flex items-center justify-between">
@@ -108,9 +110,9 @@ function ActivePullRequests() {
                       <span className="text-gray-400 text-sm">#{pr.number}</span>
                       <span className="text-gray-400 text-sm">in {pr.repo}</span>
                     </div>
-                    <h3 className="text-lg font-medium mb-2 hover:text-blue-400 cursor-pointer">
+                    <Link href={`/pr/${user?.username}/${pr.repo}/${pr.number}`} className="text-lg font-medium mb-2 hover:text-blue-400 cursor-pointer block">
                       {pr.title}
-                    </h3>
+                    </Link>
                     <div className="flex items-center space-x-4 text-sm text-gray-400 mb-3">
                       <span className="flex items-center space-x-1">
                         <Clock className="w-4 h-4" />
@@ -165,6 +167,7 @@ function ActivePullRequests() {
             ))}
         </div>
       </div>
+
     </div>
   );
 }

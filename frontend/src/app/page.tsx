@@ -3,9 +3,6 @@ import React from 'react';
 import {
   GitPullRequest,
   Users,
-  Star,
-  GitBranch,
-  GitCommit,
   TrendingUp,
 } from 'lucide-react';
 import ActivePullRequests from '@/components/activePullRequests';
@@ -14,6 +11,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import WeeklyActivity from '@/components/weeklyActivity';
 import TopRepos from '@/components/topRepos';
+import RecentActivity from '@/components/recentActivity';
+import PlaygroundCard from '@/components/playgroundCard';
 
 const Dashboard = () => {
   const { isAuthenticated } = useAuth();
@@ -34,66 +33,25 @@ const Dashboard = () => {
           {isAuthenticated ? (
             <>
               <UserStats />
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Active Pull Requests */}
-                <ActivePullRequests
-                />
 
-                {/* Repository Stats */}
-                <div className="space-y-8">
-                  
+              {/* Recent Activity - Full Width Horizontal */}
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                {/* Active Pull Requests - spans 2 columns */}
+                <div className="lg:col-span-2 space-y-8">
+                  <PlaygroundCard />
+                  <RecentActivity />
+                  <ActivePullRequests />
+                </div>
+
+                {/* Repository Stats - spans 1 column */}
+                <div className="lg:col-span-1 space-y-8">
                   {/* Top Repositories */}
                   <TopRepos />
 
                   {/* Weekly Activity */}
                   <WeeklyActivity />
-
-                  {/* Recent Activity */}
-                  <div className="space-y-8">
-                    <div className=" rounded-xl border border-gray-800" id='glassmorphism'>
-                      <div className="p-6 border-b border-gray-800">
-                        <h2 className="text-xl font-semibold">Recent Activity</h2>
-                      </div>
-                      <div className="divide-y divide-gray-800">
-                        <div className="p-4 hover:bg-gray-800/50 transition-colors">
-                          <div className="flex items-start space-x-3">
-                            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                              <GitCommit className="w-4 h-4" />
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-sm font-medium">Pushed to main</p>
-                              <p className="text-xs text-gray-400">web-app • 2 hours ago</p>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="p-4 hover:bg-gray-800/50 transition-colors">
-                          <div className="flex items-start space-x-3">
-                            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                              <GitPullRequest className="w-4 h-4" />
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-sm font-medium">Opened PR #142</p>
-                              <p className="text-xs text-gray-400">ui-components • 4 hours ago</p>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="p-4 hover:bg-gray-800/50 transition-colors">
-                          <div className="flex items-start space-x-3">
-                            <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
-                              <Star className="w-4 h-4" />
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-sm font-medium">Starred repository</p>
-                              <p className="text-xs text-gray-400">react-query • 1 day ago</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
                 </div>
-
-
               </div>
             </>
           ) : (

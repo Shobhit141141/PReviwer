@@ -13,7 +13,18 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { ChevronDown, Eye, EyeOff } from "lucide-react";
 import { MODELS, PROVIDERS } from "@/config/enums";
+import ReactMarkdown from "react-markdown";
 
+const PR_VARIABLES = [
+  { key: "title", label: "Title" },
+  { key: "description", label: "Description" },
+  { key: "author", label: "Author" },
+  { key: "state", label: "State" },
+  { key: "files_changed", label: "Files Changed" },
+  { key: "additions", label: "Additions" },
+  { key: "deletions", label: "Deletions" },
+  { key: "commits", label: "Commits" }
+];
 
 export default function PlaygroundPage() {
   const [llm_provider, setProvider] = useState<keyof typeof MODELS>(PROVIDERS[0].value as keyof typeof MODELS);
@@ -27,6 +38,9 @@ export default function PlaygroundPage() {
   const [abResult, setAbResult] = useState<{ input: string; primary: string; secondary: string } | null>(null);
   const [promptResults, setPromptResults] = useState<{ type: string; prompt: string; response: string }[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestionPos, setSuggestionPos] = useState({ top: 0, left: 0 });
+
 
   const getModelConfig = async () => {
     setLoading(true);
@@ -48,7 +62,7 @@ export default function PlaygroundPage() {
       }
     } finally {
       setLoading(false);
-    } 
+    }
   };
 
   useEffect(() => {
@@ -93,7 +107,7 @@ export default function PlaygroundPage() {
           ? "✅ Connection successful!"
           : "❌ Connection failed: " + res.error
       });
-    } catch (err : unknown) {
+    } catch (err: unknown) {
       if (typeof err === "object" && err !== null) {
         setError((err as { data?: { error?: string }; message?: string }).data?.error || (err as { message?: string }).message || "Unknown error");
       } else {
@@ -103,7 +117,26 @@ export default function PlaygroundPage() {
       setLoading(false);
     }
   };
+  useEffect(() => {
+    if (showSuggestions) {
+      document.addEventListener("mousedown", closeSuggestionBoxOnClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", closeSuggestionBoxOnClickOutside);
+      };
+    }
+  }, [showSuggestions]);
 
+  const closeSuggestionBoxOnClickOutside = (e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (
+      !target.closest(".suggestion-box") &&
+      !target.closest("textarea") &&
+      !target.closest(".suggestion-item")
+    ) {
+      setShowSuggestions(false);
+      setActivePromptField(null);
+    }
+  };
   const handleTestSystemPrompt = async () => {
     setLoading(true);
     setError(null);
@@ -172,6 +205,7 @@ export default function PlaygroundPage() {
 
   const [providerOpen, setProviderOpen] = useState(false);
   const [modelOpen, setModelOpen] = useState(false);
+  const [activePromptField, setActivePromptField] = useState<"system" | "secondary" | null>(null);
 
   return (
     <div className="max-w-4xl mx-auto py-10 px-4 space-y-8">
@@ -190,7 +224,7 @@ export default function PlaygroundPage() {
               {/* Provider Dropdown */}
               <div className="relative inline-block text-left">
                 <button
-                type="button"
+                  type="button"
                   onClick={() => setProviderOpen((prev) => !prev)}
                   className="text-white bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 focus:ring-2 focus:outline-none focus:ring-white/30 font-medium rounded-lg text-sm px-5 py-2.5 inline-flex items-center"
                 >
@@ -272,66 +306,148 @@ export default function PlaygroundPage() {
                   </button>
                 </div>
               </div>
-              <div>
+
+              <div className="">
                 <Label>System Prompt</Label>
                 <textarea
                   className="w-full mt-1 px-3 py-2 rounded-md border bg-background text-foreground border-border focus:outline-none focus:ring-2 focus:ring-ring/50"
                   value={system_prompt}
-                  onChange={(e) => setSystemPrompt(e.target.value)}
+                  onChange={(e) => {
+                    setSystemPrompt(e.target.value);
+                    const cursorPos = e.target.selectionStart;
+                    const beforeCursor = e.target.value.slice(0, cursorPos);
+                    if (beforeCursor.endsWith("{{")) {
+                      setActivePromptField("system");
+                      setShowSuggestions(true);
+                      const rect = e.target.getBoundingClientRect();
+                      setSuggestionPos({ top: rect.top + 25, left: rect.left + 20 });
+                    } else {
+                      setShowSuggestions(false);
+                    }
+                  }}
                   placeholder="Main prompt for the model"
                   rows={4}
                 />
+
+                {showSuggestions && (
+                  <ul
+                    className="absolute z-10 bg-white text-black border text-sm rounded shadow mt-1 w-52 suggestion-box"
+                    style={{ top: suggestionPos.top, left: suggestionPos.left }}
+                  >
+                    {PR_VARIABLES.map((v) => (
+                      <li
+                        key={v.key}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onClick={() => {
+                          if (activePromptField === "system") {
+                            const newPrompt = system_prompt.replace(/{{$/, `{{${v.key}}}`);
+                            setSystemPrompt(newPrompt);
+                          } else if (activePromptField === "secondary") {
+                            const newPrompt = secondary_system_prompt.replace(/{{$/, `{{${v.key}}}`);
+                            setSecondarySystemPrompt(newPrompt);
+                          }
+                          setShowSuggestions(false);
+                          setActivePromptField(null);
+                        }}
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer suggestion-item"
+                      >
+                        {v.label} – <code>{v.key}</code>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
               </div>
+
+
               <div>
                 <Label>Secondary Prompt</Label>
                 <textarea
                   className="w-full mt-1 px-3 py-2 rounded-md border bg-background text-foreground border-border focus:outline-none focus:ring-2 focus:ring-ring/50"
                   value={secondary_system_prompt}
-                  onChange={(e) => setSecondarySystemPrompt(e.target.value)}
-                  placeholder="Prompt for A/B testing"
+                  onChange={(e) => {
+                    setSecondarySystemPrompt(e.target.value);
+                    const cursorPos = e.target.selectionStart;
+                    const beforeCursor = e.target.value.slice(0, cursorPos);
+                    if (beforeCursor.endsWith("{{")) {
+                      setActivePromptField("secondary");
+                      setShowSuggestions(true);
+                      const rect = e.target.getBoundingClientRect();
+                      setSuggestionPos({ top: rect.top + 25, left: rect.left + 20 });
+                    } else {
+                      setShowSuggestions(false);
+                    }
+                  }}
+                  placeholder="Main prompt for the model"
                   rows={4}
                 />
+                {showSuggestions && (
+                  <ul
+                    className="absolute z-10 bg-white text-black border text-sm rounded shadow mt-1 w-52 suggestion-box"
+                    style={{ top: suggestionPos.top, left: suggestionPos.left }}
+                  >
+                    {PR_VARIABLES.map((v) => (
+                      <li
+                        key={v.key}
+                        onClick={() => {
+                          if (activePromptField === "system") {
+                            const newPrompt = system_prompt.replace(/{{$/, `{{${v.key}}}`);
+                            setSystemPrompt(newPrompt);
+                          } else if (activePromptField === "secondary") {
+                            const newPrompt = secondary_system_prompt.replace(/{{$/, `{{${v.key}}}`);
+                            setSecondarySystemPrompt(newPrompt);
+                          }
+                          setShowSuggestions(false);
+                          setActivePromptField(null);
+                        }}
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer suggestion-item"
+                      >
+                        {v.label} – <code>{v.key}</code>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+
+              </div>
+              <div className="flex flex-wrap gap-2 pt-2">
+                <Button type="submit" disabled={loading}>
+                  Save Config
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleTestConnection}
+                  disabled={loading}
+                >
+                  Test Connection
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleTestSystemPrompt}
+                  disabled={loading}
+                >
+                  Test Prompt
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleAbTest}
+                  disabled={loading}
+                >
+                  A/B Test
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleSavePrompts}
+                  disabled={loading}
+                >
+                  Save Prompts
+                </Button>
               </div>
             </div>
-
-            <div className="flex flex-wrap gap-2 pt-2">
-              <Button type="submit" disabled={loading}>
-                Save Config
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleTestConnection}
-                disabled={loading}
-              >
-                Test Connection
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleTestSystemPrompt}
-                disabled={loading}
-              >
-                Test Prompt
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleAbTest}
-                disabled={loading}
-              >
-                A/B Test
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={handleSavePrompts}
-                disabled={loading}
-              >
-                Save Prompts
-              </Button>
-            </div>
-
             {error && <div className="text-red-500 text-sm">{error}</div>}
             {testResult?.message && (
               <div className="text-green-600 text-sm">{testResult.message}</div>
@@ -346,11 +462,12 @@ export default function PlaygroundPage() {
             <CardTitle>🧪 Prompt Test Results</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {promptResults.map((r : unknown) => (
+            {promptResults.map((r: unknown) => (
               <div key={(r as { type: string }).type} className="border rounded p-3 bg-muted/30">
                 <div className="font-semibold">{(r as { type: string }).type}</div>
-                <div className="text-xs text-muted-foreground mb-1">
-                  Prompt: {(r as { prompt: string }).prompt}
+                <div className="text-sm text-muted-foreground mb-1">
+                  <ReactMarkdown>{(r as { prompt: string }).prompt}</ReactMarkdown>
+
                 </div>
                 <div className="whitespace-pre-wrap text-sm">{(r as { response: string }).response}</div>
               </div>
@@ -382,5 +499,7 @@ export default function PlaygroundPage() {
         </Card>
       )}
     </div>
+
   );
 }
+

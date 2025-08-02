@@ -50,6 +50,10 @@ const playgroundSchema = new mongoose.Schema({
     required: true,
     default: 1000,
   },
+  isConnectionValid : {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const Playground = mongoose.model('Playground', playgroundSchema);
