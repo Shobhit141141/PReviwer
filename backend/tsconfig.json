@@ -1,19 +1,22 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
+    "target": "ES2022",
+    "module": "ES2022",
     "strict": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "outDir": "./dist",
-    "rootDir": "./",
-    "moduleResolution": "Node",
+    "rootDir": "./src",
+    "moduleResolution": "bundler",
+    "moduleDetection": "force",
     "resolveJsonModule": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true
   },
   "ts-node": {
     "esm": true
   },
-  "include": ["src/**/*.ts", ".eslintrc.js", ".prettierrc.js", "./index.ts"],
+  "include": ["src/**/*.ts", ".eslintrc.js", ".prettierrc.js", "src/index.ts", "src"],
   "exclude": ["node_modules"]
 }
