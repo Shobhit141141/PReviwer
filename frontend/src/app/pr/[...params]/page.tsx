@@ -32,96 +32,56 @@ import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDate } from '@/utils/formatDate';
-import { githubApi } from '@/lib/api';
+import { githubApi, playgroundApi } from '@/lib/api';
 import { PRDetailsType } from '@/types';
-
+import ReactMarkdown from 'react-markdown';
 // Mock PR Report Data
-const mockPRReport = {
+type MockPRReport = {
   summary: {
-    score: 8.5,
-    complexity: "Medium",
-    risk_level: "Low",
-    estimated_review_time: "25 minutes"
-  },
+    score: number;
+    complexity: string;
+    risk_level: string;
+    estimated_review_time: string;
+  };
   analysis: {
     code_quality: {
-      score: 9.2,
-      issues: [
-        "Consider adding input validation in auth middleware",
-        "Error messages could be more descriptive"
-      ],
-      strengths: [
-        "Well-structured error handling",
-        "Comprehensive test coverage",
-        "Clean separation of concerns"
-      ]
-    },
+      score: number;
+      issues: string[];
+      strengths: string[];
+    };
     security: {
-      score: 8.8,
-      vulnerabilities: [],
-      recommendations: [
-        "Consider rate limiting for authentication endpoints",
-        "Add request logging for security monitoring"
-      ]
-    },
+      score: number;
+      vulnerabilities: string[];
+      recommendations: string[];
+    };
     performance: {
-      score: 8.0,
-      concerns: [
-        "JWT verification might benefit from caching"
-      ],
-      optimizations: [
-        "Consider using async/await consistently",
-        "Optimize database queries in auth flow"
-      ]
-    }
-  },
-  files_analysis: [
-    {
-      filename: "src/middleware/auth.ts",
-      changes: { additions: 45, deletions: 2 },
-      complexity: "Medium",
-      issues: ["Add input validation", "Consider error handling edge cases"],
-      rating: 8.5
-    },
-    {
-      filename: "src/routes/api.ts",
-      changes: { additions: 23, deletions: 8 },
-      complexity: "Low",
-      issues: [],
-      rating: 9.0
-    },
-    {
-      filename: "tests/auth.test.ts",
-      changes: { additions: 88, deletions: 13 },
-      complexity: "Low",
-      issues: ["Add more edge case tests"],
-      rating: 8.8
-    }
-  ],
-  recommendations: [
-    "✅ Code follows project conventions",
-    "✅ Good test coverage (89%)",
-    "⚠️ Consider adding integration tests",
-    "⚠️ Add documentation for new middleware",
-    "🔒 Security review recommended for auth changes"
-  ]
+      score: number;
+      concerns: string[];
+      optimizations: string[];
+    };
+  };
+  files_analysis: Array<{
+    filename: string;
+    changes: { additions: number; deletions: number };
+    complexity: string;
+    issues: string[];
+    rating: number;
+  }>;
+  recommendations: string[];
 };
 
 export default function PRDetailsPage() {
   const params = useParams<{ params?: string[] }>().params
   const router = useRouter();
 
-
-  // query params 
-  // Extract owner, repo, and PR number from URL
-
   const [prData, setPrData] = useState<PRDetailsType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showGenerateModal, setShowGenerateModal] = useState(false);
-  const [reportData, setReportData] = useState<typeof mockPRReport | null>(null);
-  const [generatingReport, setGeneratingReport] = useState(false);
-
+  const [reportData, setReportData] = useState<MockPRReport | null>(null);
+  const [generatingReport, ] = useState(false);
+  const [showReport, setShowReport] = useState(false);
+  const [templateReport, setTemplateReport] = useState<string | null>(null);
   useEffect(() => {
     const fetchPRDetails = async () => {
       try {
@@ -198,15 +158,31 @@ export default function PRDetailsPage() {
       description: "No conflicts detected, safe to merge"
     };
   };
-
   const handleGenerateReport = async () => {
-    setGeneratingReport(true);
-    // Simulate API call
-    setTimeout(() => {
-      setReportData(mockPRReport);
-      setGeneratingReport(false);
-    }, 2000);
+    try {
+      const res = await playgroundApi.generateTemplatedAnalysis({
+        prData: {
+          title: prData?.title || '',
+          description: prData?.description || '',
+          author: prData?.author.login || '',
+          state: prData?.state || '',
+          files_changed: prData?.files || [],
+          additions: prData?.stats.additions || 0,
+          deletions: prData?.stats.deletions || 0,
+          commits: prData?.commits || [],
+          labels: prData?.labels || [],
+          merge_status: prData?.can_merge || false,
+        },
+        validateOnly: false
+      });
+      setTemplateReport(res.analysis);
+      setShowReport(true);
+    } catch (error) {
+      console.error("Error generating report:", error);
+    }
   };
+
+
 
   const getScoreColor = (score: number) => {
     if (score >= 9) return "text-green-400";
@@ -366,7 +342,8 @@ export default function PRDetailsPage() {
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           {/* Main Content */}
-          <div className="xl:col-span-2 space-y-6">
+
+          {!showReport ? (<div className="xl:col-span-2 space-y-6">
             {/* Description */}
             <Card className="border-gray-800 bg-gray-900/50" id="glassmorphism">
               <CardHeader>
@@ -481,7 +458,17 @@ export default function PRDetailsPage() {
                 </div>
               </CardContent>
             </Card>
-          </div>
+          </div>) : (
+            <div className="xl:col-span-2 space-y-6">
+              <div className='flex items-center justify-between mb-4'>
+                <Button onClick={() => setShowReport(false)}>Show Report</Button>
+                <span>PR Report</span>
+              </div>
+              <ReactMarkdown>
+                {templateReport || "No report data available."}
+              </ReactMarkdown>
+            </div>
+          )}
 
           {/* Sidebar */}
           <div className="space-y-6">
@@ -494,6 +481,14 @@ export default function PRDetailsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
+                <Button
+                  variant={"default"}
+                  className="w-full mb-2 cursor-pointer"
+                  onClick={() => handleGenerateReport()}
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Generate PR Report
+                </Button>
                 <Button
                   className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 transform hover:scale-105"
                   onClick={() => setShowGenerateModal(true)}
@@ -612,7 +607,7 @@ export default function PRDetailsPage() {
 
       {/* PR Report Modal */}
       <Dialog open={showGenerateModal} onOpenChange={setShowGenerateModal}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-gray-900 border-gray-800 text-white">
+        <DialogContent className="w-max max-h-[90vh] overflow-y-auto bg-gray-900 border-gray-800 text-white">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <Sparkles className="w-6 h-6 text-purple-400" />

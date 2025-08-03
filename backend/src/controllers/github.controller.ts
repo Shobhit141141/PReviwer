@@ -203,7 +203,7 @@ export const disconnectFromGitHub = async (req: Request, res: Response) => {
       res.status(400).json({ error: 'No access token found for the user.' });
     }
   } catch (error: any) {
-    console.error('Error disconnecting from GitHub:', error.message);
+    logError('Error disconnecting from GitHub:', error.message);
     res.status(500).send('Failed to disconnect from GitHub');
   }
 };

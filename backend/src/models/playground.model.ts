@@ -7,6 +7,11 @@ const playgroundSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
+  user_prompt : {
+    type: String,
+    required: true,
+    default: 'Please analyze this pull request based on the context provided in the system prompt.',
+  },
   system_prompt: {
     type: String,
     required: true,

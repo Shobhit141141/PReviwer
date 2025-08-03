@@ -3,7 +3,6 @@ import Playground from '../models/playground.model';
 import { useLLMConnection } from '../utils/llmTest';
 import { PR_TEMPLATES } from '../data/prTemplates';
 import { decrypt, encrypt } from '../utils/encrypt_decrypt';
-import { log } from 'console';
 import { logError } from '../utils/logger';
 import { TemplateVariable, TemplateValidation } from '../types';
 
@@ -35,9 +34,18 @@ const AVAILABLE_TEMPLATE_VARIABLES: Record<string, TemplateVariable> = {
   },
   files_changed: {
     key: 'files_changed',
-    description: 'Number of files changed',
-    example: '5',
-    path: 'prData.stats?.changed_files || 0',
+    description: 'all the files changed in the pull request',
+    example: `[
+        {
+            "filename": "app.py",
+            "status": "modified",
+            "additions": 5,
+            "deletions": 1,
+            "changes": 6,
+            "patch": "@@ -4,13 +4,14 @@\n from functions.file_to_text import pdf_to_text  \r\n import joblib\r\n \r\n-\r\n+# Load the model\r\n MODEL_PATH = 'best_model.pkl'\r\n if os.path.exists(MODEL_PATH):\r\n     model = joblib.load(MODEL_PATH)\r\n else:\r\n     raise FileNotFoundError(f\"Model file '{MODEL_PATH}' not found.\")\r\n \r\n+# Custom category order for the model output labels\r\n CUSTOM_CATEGORY_ORDER = {\r\n     'Legal': 0,\r\n     'Medical': 10,\r\n@@ -27,9 +28,11 @@\n app = Flask(__name__)\r\n app.config['UPLOAD_FOLDER'] = 'uploads'\r\n \r\n+# Create upload folder if it does not exist\r\n if not os.path.exists(app.config['UPLOAD_FOLDER']):\r\n     os.makedirs(app.config['UPLOAD_FOLDER'])\r\n \r\n+# Route to index.html\r\n @app.route('/')\r\n def upload_file():\r\n     return render_template('index.html')\r\n@@ -65,5 +68,6 @@ def uploader():\n     except Exception as e:\r\n         return jsonify({'error': str(e)}), 500\r\n \r\n+# Run the app  \r\n if __name__ == '__main__':\r\n     app.run(debug=True)\r"
+        }
+    ]`,
+    path: 'prData.stats?.changed_files || []',
   },
   additions: {
     key: 'additions',
@@ -93,8 +101,14 @@ const AVAILABLE_TEMPLATE_VARIABLES: Record<string, TemplateVariable> = {
  */
 export const configureModel = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { llm_provider, llm_model, llm_api_key, system_prompt, secondary_system_prompt } =
-      req.body;
+    const {
+      llm_provider,
+      llm_model,
+      llm_api_key,
+      system_prompt,
+      secondary_system_prompt,
+      user_prompt,
+    } = req.body;
     if (!req.user || !req.user.id) {
       res.status(401).json({ error: 'Unauthorized: User not found' });
       return;
@@ -105,6 +119,7 @@ export const configureModel = async (req: Request, res: Response): Promise<void>
       llm_api_key: encrypt(llm_api_key),
       system_prompt,
       secondary_system_prompt,
+      user_prompt,
     };
 
     const savedConfig = await Playground.findOneAndUpdate(
@@ -215,7 +230,7 @@ export const abTestPrompts = async (req: Request, res: Response): Promise<void> 
  * @returns { message: 'Prompts updated', data: updatedConfig }
  */
 export const savePrompts = async (req: Request, res: Response): Promise<void> => {
-  const { system_prompt, secondary_system_prompt } = req.body;
+  const { system_prompt, secondary_system_prompt, user_prompt } = req.body;
 
   try {
     if (!req.user || !req.user.id) {
@@ -224,7 +239,7 @@ export const savePrompts = async (req: Request, res: Response): Promise<void> =>
     }
     const updated = await Playground.findOneAndUpdate(
       { user: req.user.id },
-      { system_prompt, secondary_system_prompt },
+      { system_prompt, secondary_system_prompt, user_prompt },
       { new: true },
     );
     res.status(200).json({ message: 'Prompts updated', data: updated });
@@ -708,18 +723,42 @@ export const getTemplateVariables = async (req: Request, res: Response): Promise
  * @param prData - Pull request data
  * @returns Parsed system prompt with variables replaced
  */
-const parseSystemPromptTemplate = (systemPrompt: string, prData: any): string => {
+const parseUserPromptTemplate = (systemPrompt: string, prData: any): string => {
   let parsedPrompt = systemPrompt;
 
-  // Replace each template variable with actual data
   Object.entries(AVAILABLE_TEMPLATE_VARIABLES).forEach(([key, config]) => {
     const variablePattern = new RegExp(`{{\\s*${key}\\s*}}`, 'gi');
-    const value = getNestedValue(prData, config.path) || 'N/A';
-    parsedPrompt = parsedPrompt.replace(variablePattern, String(value));
-  });
+    let value = getNestedValue(prData, config.path);
 
+    // Handle array of file changes
+    if (key === 'files_changed' && Array.isArray(value)) {
+      value = value
+        .map(
+          (file: any) =>
+            `- ${file.filename} (${file.status}, +${file.additions}, -${file.deletions})\n${file.patch || ''}`
+        )
+        .join('\n');
+
+      if (!value) value = 'No files changed';
+    }
+
+    // Stringify object values to avoid [object Object]
+    if (typeof value === 'object' && value !== null) {
+      try {
+        value = JSON.stringify(value, null, 2);
+      } catch {
+        value = '[Unserializable Object]';
+      }
+    }
+
+    parsedPrompt = parsedPrompt.replace(
+      variablePattern,
+      value !== undefined && value !== null ? String(value) : 'N/A'
+    );
+  });
   return parsedPrompt;
 };
+
 
 /**
  * Get nested object value using dot notation path
@@ -797,20 +836,20 @@ export const generateTemplatedAnalysisReport = async (
   res: Response,
 ): Promise<void> => {
   try {
-    if (!req.user || !req.user.id) {
-      res.status(401).json({ error: 'Unauthorized: User not found' });
+    const userId = req.user?.id;
+
+    const { prData, validateOnly = false } = req.body;
+
+    const playgroundConfig = await Playground.findOne({ user: userId });
+    if (!playgroundConfig) {
+      res.status(404).json({
+        error: 'Playground configuration not found. Please configure your LLM model first.',
+      });
       return;
     }
-
-    const {
-      prData,
-      systemPromptTemplate,
-      llm_provider,
-      llm_model,
-      llm_api_key,
-      validateOnly = false,
-    } = req.body;
-
+    const { llm_provider, llm_model, llm_api_key, user_prompt } = playgroundConfig;
+    const systemPromptTemplate = playgroundConfig.system_prompt;
+    // Validate required fields
     if (!prData) {
       res.status(400).json({ error: 'PR data is required for analysis' });
       return;
@@ -822,7 +861,7 @@ export const generateTemplatedAnalysisReport = async (
     }
 
     // Validate template variables
-    const validation = validateSystemPromptTemplate(systemPromptTemplate);
+    const validation = validateSystemPromptTemplate(user_prompt);
 
     if (!validation.isValid) {
       res.status(400).json({
@@ -841,14 +880,14 @@ export const generateTemplatedAnalysisReport = async (
       res.status(200).json({
         success: true,
         validation,
-        parsedPrompt: parseSystemPromptTemplate(systemPromptTemplate, prData),
+        parsedPrompt: parseUserPromptTemplate(user_prompt, prData),
         message: 'Template validation successful',
       });
       return;
     }
 
     // Parse the system prompt template with actual PR data
-    const parsedSystemPrompt = parseSystemPromptTemplate(systemPromptTemplate, prData);
+    const parsedUserPrompt = parseUserPromptTemplate(user_prompt, prData);
 
     // Get LLM configuration (use provided or from user's saved config)
     let llmConfig;
@@ -860,7 +899,7 @@ export const generateTemplatedAnalysisReport = async (
       };
     } else {
       // Use saved configuration
-      const config = await Playground.findOne({ user: req.user.id });
+      const config = await Playground.findOne({ user: userId });
       if (!config) {
         res.status(404).json({
           error:
@@ -881,9 +920,8 @@ export const generateTemplatedAnalysisReport = async (
       llm_provider: llmConfig.llm_provider,
       llm_model: llmConfig.llm_model,
       llm_api_key: llmConfig.llm_api_key,
-      system_prompt: parsedSystemPrompt,
-      user_input:
-        'Please analyze this pull request based on the context provided in the system prompt.',
+      system_prompt: systemPromptTemplate,
+      user_input: parsedUserPrompt,
     });
 
     res.status(200).json({
@@ -891,7 +929,7 @@ export const generateTemplatedAnalysisReport = async (
       analysis: analysisResponse,
       templateInfo: {
         originalTemplate: systemPromptTemplate,
-        parsedPrompt: parsedSystemPrompt,
+        parsedPrompt: parsedUserPrompt,
         usedVariables: validation.validVariables,
         unusedVariables: validation.unusedVariables,
       },
@@ -951,7 +989,7 @@ export const previewSystemPromptTemplate = async (req: Request, res: Response): 
     const validation = validateSystemPromptTemplate(systemPromptTemplate);
 
     // Parse with sample data
-    const preview = parseSystemPromptTemplate(systemPromptTemplate, samplePrData);
+    const preview = parseUserPromptTemplate(systemPromptTemplate, samplePrData);
 
     res.status(200).json({
       success: true,

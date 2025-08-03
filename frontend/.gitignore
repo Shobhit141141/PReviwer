@@ -40,5 +40,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# vscode
-.vscode/
+# add vs code folder which is in root C:\Users\Asus\Desktop\MERN\TIMES\Backend_v2\PReviwer\.vscode
+/.vscode

@@ -346,14 +346,7 @@ export const playgroundApi = {
   },
 
   generateTemplatedAnalysis: async (data: {
-    prData: {
-      owner: string;
-      repo: string;
-    };
-    systemPromptTemplate: string;
-    llm_provider?: string;
-    llm_model?: string;
-    llm_api_key?: string;
+    prData: object;
     validateOnly?: boolean;
   }) => {
     const token = api.getAccessToken();

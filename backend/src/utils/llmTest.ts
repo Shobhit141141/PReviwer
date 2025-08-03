@@ -1,7 +1,8 @@
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { logInfo } from './logger';
+import { logDebug, logInfo } from './logger';
+import { sys } from 'typescript';
 
 type TestLLMOptions = {
   llm_provider: 'openai' | 'anthropic' | 'google';
@@ -12,7 +13,6 @@ type TestLLMOptions = {
 };
 
 const testCache = new Map<string, string>();
-const MAX_TOKENS = 300;
 
 export async function useLLMConnection({
   llm_provider,
@@ -22,13 +22,6 @@ export async function useLLMConnection({
   user_input = 'Tell me a joke.',
 }: TestLLMOptions): Promise<string> {
   const cacheKey = `${llm_provider}:${llm_model}:${llm_api_key}`;
-  if (testCache.has(cacheKey)) {
-    return `✅ Cached test success for ${cacheKey}`;
-  }
-
-  // const timeoutPromise = new Promise<string>((_, reject) =>
-  //   setTimeout(() => reject(new Error('⏱️ Timeout: LLM took too long to respond.')), TIMEOUT_MS)
-  // );
 
   const startTime = Date.now();
 
@@ -42,7 +35,6 @@ export async function useLLMConnection({
           { role: 'system', content: system_prompt },
           { role: 'user', content: user_input },
         ],
-        max_tokens: MAX_TOKENS,
         temperature: 0.5,
       });
 
@@ -56,7 +48,7 @@ export async function useLLMConnection({
 
       const response = await anthropic.messages.create({
         model: llm_model,
-        max_tokens: MAX_TOKENS,
+        max_tokens: 1000,
         temperature: 0.5,
         system: system_prompt,
         messages: [{ role: 'user', content: user_input }],
@@ -69,18 +61,20 @@ export async function useLLMConnection({
     }
 
     if (llm_provider === 'google') {
-      const genAI = new GoogleGenerativeAI(llm_api_key);
-      logInfo(`Using Google model: ${llm_model}`);
-      const genModel = genAI.getGenerativeModel({ model: llm_model });
+      const genAI = new GoogleGenerativeAI(llm_api_key);      const genModel = genAI.getGenerativeModel({ model: llm_model });
 
       const result = await genModel.generateContent({
-        contents: [{ role: 'user', parts: [{ text: user_input }] }],
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text: `${system_prompt}\n${user_input}` }],
+          },
+        ],
         generationConfig: {
-          maxOutputTokens: MAX_TOKENS,
           temperature: 0.7,
         },
       });
-
+     
       const text =
         typeof result.response.text === 'function'
           ? result.response.text()

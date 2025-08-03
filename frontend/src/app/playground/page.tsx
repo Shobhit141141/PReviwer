@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, Eye, EyeOff } from "lucide-react";
+import { BadgeInfo, ChevronDown, Eye, EyeOff } from "lucide-react";
 import { MODELS, PROVIDERS } from "@/config/enums";
 import ReactMarkdown from "react-markdown";
 
@@ -23,7 +23,12 @@ const PR_VARIABLES = [
   { key: "files_changed", label: "Files Changed" },
   { key: "additions", label: "Additions" },
   { key: "deletions", label: "Deletions" },
-  { key: "commits", label: "Commits" }
+  { key: "commits", label: "Commits" },
+  { key: "labels", label: "Labels" },
+  {
+    key: "merge_status",
+    label: "Merge Status"
+  },
 ];
 
 export default function PlaygroundPage() {
@@ -32,6 +37,7 @@ export default function PlaygroundPage() {
   const [llm_api_key, setApiKey] = useState("");
   const [showApiKey, setShowApiKey] = useState(false);
   const [system_prompt, setSystemPrompt] = useState("");
+  const [user_prompt, setUserPrompt] = useState("Please analyze this pull request based on the context provided in the system prompt. You can use the {{variables}} to access the pull request data. For example, you can use {{title}} to get the title of the pull request.");
   const [secondary_system_prompt, setSecondarySystemPrompt] = useState("");
   const [loading, setLoading] = useState(false);
   const [testResult, setTestResult] = useState<{ message: string } | null>(null);
@@ -53,6 +59,7 @@ export default function PlaygroundPage() {
         setApiKey(res.data.llm_api_key || "");
         setSystemPrompt(res.data.system_prompt || "");
         setSecondarySystemPrompt(res.data.secondary_system_prompt || "");
+        setUserPrompt(res.data.user_prompt || "");
       }
     } catch (err: unknown) {
       if (typeof err === "object" && err !== null) {
@@ -79,7 +86,8 @@ export default function PlaygroundPage() {
         llm_model,
         llm_api_key,
         system_prompt,
-        secondary_system_prompt
+        secondary_system_prompt,
+        user_prompt
       });
       setTestResult({ message: res.message });
     } catch (err: unknown) {
@@ -205,7 +213,7 @@ export default function PlaygroundPage() {
 
   const [providerOpen, setProviderOpen] = useState(false);
   const [modelOpen, setModelOpen] = useState(false);
-  const [activePromptField, setActivePromptField] = useState<"system" | "secondary" | null>(null);
+  const [, setActivePromptField] = useState<"system" | "secondary" | "user" | null>(null);
 
   return (
     <div className="max-w-4xl mx-auto py-10 px-4 space-y-8">
@@ -314,22 +322,22 @@ export default function PlaygroundPage() {
                   value={system_prompt}
                   onChange={(e) => {
                     setSystemPrompt(e.target.value);
-                    const cursorPos = e.target.selectionStart;
-                    const beforeCursor = e.target.value.slice(0, cursorPos);
-                    if (beforeCursor.endsWith("{{")) {
-                      setActivePromptField("system");
-                      setShowSuggestions(true);
-                      const rect = e.target.getBoundingClientRect();
-                      setSuggestionPos({ top: rect.top + 25, left: rect.left + 20 });
-                    } else {
-                      setShowSuggestions(false);
-                    }
+                    // const cursorPos = e.target.selectionStart;
+                    // const beforeCursor = e.target.value.slice(0, cursorPos);
+                    // if (beforeCursor.endsWith("{{")) {
+                    //   setActivePromptField("system");
+                    //   setShowSuggestions(true);
+                    //   const rect = e.target.getBoundingClientRect();
+                    //   setSuggestionPos({ top: rect.top + 25, left: rect.left + 20 });
+                    // } else {
+                    //   setShowSuggestions(false);
+                    // }
                   }}
                   placeholder="Main prompt for the model"
                   rows={4}
                 />
 
-                {showSuggestions && (
+                {/* {showSuggestions && (
                   <ul
                     className="absolute z-10 bg-white text-black border text-sm rounded shadow mt-1 w-52 suggestion-box"
                     style={{ top: suggestionPos.top, left: suggestionPos.left }}
@@ -355,7 +363,7 @@ export default function PlaygroundPage() {
                       </li>
                     ))}
                   </ul>
-                )}
+                )} */}
 
               </div>
 
@@ -367,21 +375,21 @@ export default function PlaygroundPage() {
                   value={secondary_system_prompt}
                   onChange={(e) => {
                     setSecondarySystemPrompt(e.target.value);
-                    const cursorPos = e.target.selectionStart;
-                    const beforeCursor = e.target.value.slice(0, cursorPos);
-                    if (beforeCursor.endsWith("{{")) {
-                      setActivePromptField("secondary");
-                      setShowSuggestions(true);
-                      const rect = e.target.getBoundingClientRect();
-                      setSuggestionPos({ top: rect.top + 25, left: rect.left + 20 });
-                    } else {
-                      setShowSuggestions(false);
-                    }
+                    // const cursorPos = e.target.selectionStart;
+                    // const beforeCursor = e.target.value.slice(0, cursorPos);
+                    // if (beforeCursor.endsWith("{{")) {
+                    //   setActivePromptField("secondary");
+                    //   setShowSuggestions(true);
+                    //   const rect = e.target.getBoundingClientRect();
+                    //   setSuggestionPos({ top: rect.top + 25, left: rect.left + 20 });
+                    // } else {
+                    //   setShowSuggestions(false);
+                    // }
                   }}
                   placeholder="Main prompt for the model"
                   rows={4}
                 />
-                {showSuggestions && (
+                {/* {showSuggestions && (
                   <ul
                     className="absolute z-10 bg-white text-black border text-sm rounded shadow mt-1 w-52 suggestion-box"
                     style={{ top: suggestionPos.top, left: suggestionPos.left }}
@@ -406,9 +414,56 @@ export default function PlaygroundPage() {
                       </li>
                     ))}
                   </ul>
+                )} */}
+
+
+              </div>
+
+              <div className="col-span-full w-full ">
+                <Label>User Prompt</Label>
+                <textarea
+                  className="w-full mt-1 px-3 py-2 rounded-md border bg-background text-foreground border-border focus:outline-none focus:ring-2 focus:ring-ring/50"
+                  value={user_prompt}
+                  onChange={(e) => {
+                    setUserPrompt(e.target.value);
+                    const cursorPos = e.target.selectionStart;
+                    const beforeCursor = e.target.value.slice(0, cursorPos);
+                    if (beforeCursor.endsWith("{{")) {
+                      setActivePromptField("user");
+                      setShowSuggestions(true);
+                      const rect = e.target.getBoundingClientRect();
+                      setSuggestionPos({ top: rect.top + 25, left: rect.left + 20 });
+                    } else {
+                      setShowSuggestions(false);
+                    }
+                  }}
+                  placeholder="User prompt for the model"
+                  rows={8}
+                />
+                <p className="text-sm text-muted-foreground flex items-center">
+                  <BadgeInfo className=" h-4 "/>use <code className="text-yellow-500 mx-1">{"{{variable}} "}</code> to reference variables in your prompt.
+                </p>
+                {showSuggestions && (
+                  <ul
+                    className="absolute z-10 bg-white text-black border text-sm rounded shadow mt-1 w-52 suggestion-box"
+                    style={{ top: suggestionPos.top, left: suggestionPos.left }}
+                  >
+                    {PR_VARIABLES.map((v) => (
+                      <li
+                        key={v.key}
+                        onClick={() => {
+                          const newPrompt = user_prompt.replace(/{{$/, `{{${v.key}}}`);
+                          setUserPrompt(newPrompt);
+                          setShowSuggestions(false);
+                          setActivePromptField(null);
+                        }}
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer suggestion-item"
+                      >
+                        {v.label} – <code>{v.key}</code>
+                      </li>
+                    ))}
+                  </ul>
                 )}
-
-
               </div>
               <div className="flex flex-wrap gap-2 pt-2">
                 <Button type="submit" disabled={loading}>

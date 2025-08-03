@@ -2,7 +2,6 @@ import axios from 'axios';
 import { Request, Response, NextFunction } from 'express';
 import User from '../models/user.model';
 import { UserInfo } from '../types';
-import { logDebug } from '../utils/logger';
 
 export const githubAuthMiddleware = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const authHeader = req.headers.authorization;

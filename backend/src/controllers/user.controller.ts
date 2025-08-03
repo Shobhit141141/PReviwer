@@ -1,7 +1,29 @@
 
 import { Octokit } from '@octokit/rest';
 import { Request, Response } from 'express';
+import User from '../models/user.model';
 
+
+
+export const getUser = async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    res.json(user);
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    res.status(500).json({ error: 'Failed to fetch user profile' });
+  }
+};
 /** Get GitHub analytics for the authenticated user
  * /user/analytics - PRIVATE
  * This function fetches the user's profile data from GitHub.
