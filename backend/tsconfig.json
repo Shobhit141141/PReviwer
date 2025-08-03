@@ -6,7 +6,7 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": ".",
     "moduleResolution": "bundler",
     "moduleDetection": "force",
     "resolveJsonModule": true,
@@ -16,6 +16,6 @@
   "ts-node": {
     "esm": true
   },
-  "include": ["src/**/*.ts", ".eslintrc.js", ".prettierrc.js", "src/index.ts", "src"],
+  "include": ["src/**/*.ts", ".eslintrc.js", ".prettierrc.js", "index.ts"],
   "exclude": ["node_modules"]
 }
