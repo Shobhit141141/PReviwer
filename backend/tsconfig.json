@@ -11,8 +11,7 @@
     "moduleDetection": "force",
     "resolveJsonModule": true,
     "esModuleInterop": true,
-    "allowImportingTsExtensions": true,
-    "noEmit": true
+    "noEmit": false
   },
   "ts-node": {
     "esm": true
