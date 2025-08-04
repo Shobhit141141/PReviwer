@@ -1,7 +1,6 @@
 import { Router } from 'express';
-import { githubAuthMiddleware } from '../middlewares/verifyToken';
-import User from '../models/user.model';
-import { getGithubAnalytics, getUser } from '../controllers/user.controller';
+import { githubAuthMiddleware } from '../middlewares/verifyToken.js';
+import { getGithubAnalytics, getUser } from '../controllers/user.controller.js';
 
 const router = Router();
 

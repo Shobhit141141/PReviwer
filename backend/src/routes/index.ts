@@ -1,9 +1,9 @@
 import { Express } from 'express';
-import { handleResponse } from '../utils/responseHandler';
-import githubRoutes from './github.routes';
-import userRoutes from './user.routes';
-import playgroundRouter from './playground.route';
-import { githubAuthMiddleware } from '../middlewares/verifyToken';
+import { handleResponse } from '../utils/responseHandler.js';
+import githubRoutes from './github.routes.js';
+import userRoutes from './user.routes.js';
+import playgroundRouter from './playground.route.js';
+import { githubAuthMiddleware } from '../middlewares/verifyToken.js';
 
 const registerRoutes = (app: Express): void => {
    

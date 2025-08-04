@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { encrypt } from '../utils/encrypt_decrypt';
+import { encrypt } from '../utils/encrypt_decrypt.js';
 
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },

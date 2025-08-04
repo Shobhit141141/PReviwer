@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
-import { CONSTANTS } from './constants';
-import { logError, logSuccess } from '../utils/logger';
+import { CONSTANTS } from './constants.js';
+import { logError, logSuccess } from '../utils/logger.js';
 
 const connectDB = async () => {
   try {

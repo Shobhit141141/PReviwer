@@ -1,7 +1,7 @@
 // encrypt the data using AES-256-CBC
 import crypto from 'crypto';
-import { CONSTANTS } from '../config/constants';
-import { logError } from './logger';
+import { CONSTANTS } from '../config/constants.js';
+import { logError } from './logger.js';
 const algorithm = 'aes-256-cbc';
 const key = crypto.scryptSync(CONSTANTS.ENCRYPTION_KEY, 'salt', 32);
 const iv = crypto.randomBytes(16);

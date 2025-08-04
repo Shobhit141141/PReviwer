@@ -1,8 +1,7 @@
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { logDebug, logInfo } from './logger';
-import { sys } from 'typescript';
+import { logInfo } from './logger.js';
 
 type TestLLMOptions = {
   llm_provider: 'openai' | 'anthropic' | 'google';
@@ -61,7 +60,8 @@ export async function useLLMConnection({
     }
 
     if (llm_provider === 'google') {
-      const genAI = new GoogleGenerativeAI(llm_api_key);      const genModel = genAI.getGenerativeModel({ model: llm_model });
+      const genAI = new GoogleGenerativeAI(llm_api_key);
+      const genModel = genAI.getGenerativeModel({ model: llm_model });
 
       const result = await genModel.generateContent({
         contents: [
@@ -74,7 +74,7 @@ export async function useLLMConnection({
           temperature: 0.7,
         },
       });
-     
+
       const text =
         typeof result.response.text === 'function'
           ? result.response.text()

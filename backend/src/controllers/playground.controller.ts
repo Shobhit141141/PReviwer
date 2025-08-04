@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import Playground from '../models/playground.model';
-import { useLLMConnection } from '../utils/llmTest';
-import { PR_TEMPLATES } from '../data/prTemplates';
-import { decrypt, encrypt } from '../utils/encrypt_decrypt';
-import { logError } from '../utils/logger';
-import { TemplateVariable, TemplateValidation } from '../types';
+import Playground from '../models/playground.model.js';
+import { useLLMConnection } from '../utils/llmTest.js';
+import { PR_TEMPLATES } from '../data/prTemplates.js';
+import { decrypt, encrypt } from '../utils/encrypt_decrypt.js';
+import { logError } from '../utils/logger.js';
+import { TemplateVariable, TemplateValidation } from '../types/index.js';
 
 // Available template variables for PR analysis
 const AVAILABLE_TEMPLATE_VARIABLES: Record<string, TemplateVariable> = {

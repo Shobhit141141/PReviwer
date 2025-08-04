@@ -6,9 +6,9 @@ import {
   refreshAccessToken,
   getRecentActivityController,
   getPRDetailsController,
-} from '../controllers/github.controller';
-import { githubAuthMiddleware } from '../middlewares/verifyToken';
-import { getActivePullRequests, getRepoStats, getWeeklyActivity } from '../services/github.service';
+} from '../controllers/github.controller.js';
+import { githubAuthMiddleware } from '../middlewares/verifyToken.js';
+import { getActivePullRequests, getRepoStats, getWeeklyActivity } from '../services/github.service.js';
 
 const router = Router();
 

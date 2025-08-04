@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { MODELS_FOR_EVERY_PROVIDER } from '../config/enums';
+import { MODELS_FOR_EVERY_PROVIDER } from '../config/enums.js';
 
 const playgroundSchema = new mongoose.Schema({
   user: {

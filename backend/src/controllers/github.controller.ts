@@ -1,9 +1,9 @@
 import axios from 'axios';
 import { Request, Response } from 'express';
-import User from '../models/user.model';
-import { decrypt, encrypt } from '../utils/encrypt_decrypt';
-import { CONSTANTS } from '../config/constants';
-import { logDebug, logError } from '../utils/logger';
+import User from '../models/user.model.js';
+import { decrypt, encrypt } from '../utils/encrypt_decrypt.js';
+import { CONSTANTS } from '../config/constants.js';
+import { logDebug, logError } from '../utils/logger.js';
 
 const CLIENT_ID = CONSTANTS.GITHUB_CLIENT_ID;
 const CLIENT_SECRET = CONSTANTS.GITHUB_CLIENT_SECRET;

@@ -10,7 +10,7 @@ import {
   getTemplateVariables,
   generateTemplatedAnalysisReport,
   previewSystemPromptTemplate,
-} from '../controllers/playground.controller';
+} from '../controllers/playground.controller.js';
 
 const router = Router();
 

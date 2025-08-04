@@ -6,9 +6,9 @@
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npx tsc && npm run fix-imports",
+    "build": "npx tsc",
     "fix-imports": "node fix-imports.js",
-    "start": "tsx index.ts",
+    "start": "node dist/index.js",
     "dev": "tsx watch index.ts",
     "lint": "eslint . --fix",
     "format": "prettier . --write"

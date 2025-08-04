@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Octokit } from '@octokit/rest';
-import { logDebug, logError } from '../utils/logger';
+import { logDebug, logError } from '../utils/logger.js';
 import axios from 'axios';
 
 /**
