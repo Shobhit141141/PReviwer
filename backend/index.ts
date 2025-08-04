@@ -15,7 +15,6 @@ const app = express();
 
 // Middlewares
 app.use(cors());
-app.use(errorHandler);
 app.use(morgan('dev'));
 app.use(express.json());
 
@@ -24,15 +23,16 @@ app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
 // Connect to database
-connectDB();
-
-// Register routes
-registerRoutes(app);
+await connectDB();
 
 // Default route
 app.get('/', (_, res) => {
   handleResponse(res, 200, true, 'Welcome to API');
 });
+
+// Register routes
+registerRoutes(app);
+app.use(errorHandler);
 
 const PORT = CONSTANTS.PORT;
 
