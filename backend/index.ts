@@ -41,5 +41,5 @@ const PORT = CONSTANTS.PORT;
 
 // Start server
 app.listen(PORT, () => {
-  logInfo(`Server running on port ${PORT}`);
+  logInfo(`Previwer Server is running on port ${PORT}`);
 });
