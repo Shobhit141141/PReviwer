@@ -49,13 +49,13 @@ function Navbar() {
           )}
 
           <div className="flex items-center space-x-4">
-            <button className="relative p-2 hover:bg-gray-800 rounded-lg transition-colors">
+            {/* <button className="relative p-2 hover:bg-gray-800 rounded-lg transition-colors">
               <Bell className="w-5 h-5" />
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
             </button>
             <button className="p-2 hover:bg-gray-800 rounded-lg transition-colors">
               <Settings className="w-5 h-5" />
-            </button>
+            </button> */}
 
             {/* User Profile Section */}
             {isLoading ? (
