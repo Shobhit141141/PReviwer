@@ -218,7 +218,7 @@ export const disconnectFromGitHub = async (req: Request, res: Response) => {
 export const getRecentActivityController = async (req: Request, res: Response) => {
   try {
     // Import the service function dynamically to avoid circular imports
-    const { getRecentActivity } = await import('../services/github.service');
+    const { getRecentActivity } = await import('../services/github.service.js');
     await getRecentActivity(req, res);
   } catch (error: any) {
     logError('Error in recent activity controller:', error);
@@ -236,7 +236,7 @@ export const getRecentActivityController = async (req: Request, res: Response) =
 export const getPRDetailsController = async (req: Request, res: Response) => {
   try {
     // Import the service function dynamically to avoid circular imports
-    const { getPRDetails } = await import('../services/github.service');
+    const { getPRDetails } = await import('../services/github.service.js');
     await getPRDetails(req, res);
   } catch (error: any) {
     logError('Error in PR details controller:', error);
