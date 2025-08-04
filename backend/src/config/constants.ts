@@ -10,6 +10,10 @@ requiredEnvVars.forEach((key) => {
 
 export const CONSTANTS = {
   MONGO_URI: process.env.MONGO_URI || 'mongodb://localhost:27017/previewer_v15',
+  REDIS_URI: process.env.REDIS_URI || 'redis://localhost:6379',
+  REDIS_HOST: process.env.REDIS_HOST || 'localhost',
+  REDIS_PORT: parseInt(process.env.REDIS_PORT || '6379'),
+  REDIS_PASSWORD: process.env.REDIS_PASSWORD || '',
   PORT: process.env.PORT || 5000,
   ENCRYPTION_KEY: process.env.ENCRYPTION_KEY || 'your_default_encryption_key',
 

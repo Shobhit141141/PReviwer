@@ -3,16 +3,8 @@ import { logError } from '../utils/logger.js';
 import { handleResponse } from '../utils/responseHandler.js';
 
 export const errorHandler = (err: Error, _req: Request, res: Response, _next: NextFunction) => {
-    logError('Unhandled Server Error:', err);
-    handleResponse(res, 500, false, 'Internal server error');
+  logError('Unhandled Server Error:', err);
+  handleResponse(res, 500, false, 'Internal server error');
 };
 
-process.on('uncaughtException', (err) => {
-    console.error('Uncaught Exception:', err);
-    process.exit(1);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-    process.exit(1);
-});
+// Note: Process handlers moved to index.ts to avoid conflicts with graceful shutdown
