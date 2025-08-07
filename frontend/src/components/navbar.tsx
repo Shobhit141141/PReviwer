@@ -1,5 +1,5 @@
 "use client";
-import { Bell, Github, Settings, LogOut } from "lucide-react";
+import {  Github, LogOut } from "lucide-react";
 import { Button } from "./ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loading } from "./ui/loading";

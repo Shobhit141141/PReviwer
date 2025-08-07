@@ -443,4 +443,182 @@ export const githubApi = {
   },
 };
 
+// PR Report API
+export const prReportApi = {
+  savePRReport: async (data: {
+    prIdentifier: string;
+    analysisReport: string;
+    prMetadata: unknown;
+    reportTitle?: string;
+    templateReport?: string;
+    playgroundConfig?: {
+      provider: string;
+      model: string;
+      systemPrompt: string;
+      userPrompt: string;
+      maxTokens?: number;
+      temperature?: number;
+    };
+  }) => {
+    const token = api.getAccessToken();
+    if (!token) throw new ApiError("No access token found", 401);
+    const response = await fetch(`${API_BASE_URL}/api/pr-reports/save`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+    return handleResponse(response);
+  },
+
+  getUserPRReports: async (page = 1, limit = 10) => {
+    const token = api.getAccessToken();
+    if (!token) throw new ApiError("No access token found", 401);
+    const response = await fetch(
+      `${API_BASE_URL}/api/pr-reports/user?page=${page}&limit=${limit}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return handleResponse(response);
+  },
+
+  getPRReports: async (prIdentifier: string) => {
+    const token = api.getAccessToken();
+    if (!token) throw new ApiError("No access token found", 401);
+    const response = await fetch(
+      `${API_BASE_URL}/api/pr-reports/pr/${encodeURIComponent(prIdentifier)}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return handleResponse(response);
+  },
+
+  getPRReportById: async (reportId: string) => {
+    const token = api.getAccessToken();
+    if (!token) throw new ApiError("No access token found", 401);
+    const response = await fetch(`${API_BASE_URL}/api/pr-reports/${reportId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return handleResponse(response);
+  },
+
+  deletePRReport: async (reportId: string) => {
+    const token = api.getAccessToken();
+    if (!token) throw new ApiError("No access token found", 401);
+    const response = await fetch(`${API_BASE_URL}/api/pr-reports/${reportId}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return handleResponse(response);
+  },
+
+  exportPRReport: async (reportId: string, format: string) => {
+    const token = api.getAccessToken();
+    if (!token) throw new ApiError("No access token found", 401);
+    const response = await fetch(
+      `${API_BASE_URL}/api/pr-reports/${reportId}/export/${format}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new ApiError(
+        errorData.error || `HTTP error! status: ${response.status}`,
+        response.status,
+        errorData
+      );
+    }
+
+    return response; // Return response directly for file download
+  },
+
+  checkIfReportsExist: async (prIdentifier: string): Promise<boolean> => {
+    try {
+      const reports = await prReportApi.getPRReports(prIdentifier);
+      return Array.isArray(reports) && reports.length > 0;
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) {
+        return false;
+      }
+      throw error;
+    }
+  },
+};
+
 export { ApiError };
+
+// Cache Management API
+export const cacheApi = {
+  clearAnalysisAndPRData: async () => {
+    const token = api.getAccessToken();
+    if (!token) throw new ApiError("No access token found", 401);
+    const response = await fetch(
+      `${API_BASE_URL}/api/cache/clear-analysis-data`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return handleResponse(response);
+  },
+
+  clearSpecificPRCache: async (
+    owner: string,
+    repo: string,
+    prNumber: string | number
+  ) => {
+    const token = api.getAccessToken();
+    if (!token) throw new ApiError("No access token found", 401);
+    const response = await fetch(
+      `${API_BASE_URL}/api/cache/pr/${owner}/${repo}/${prNumber}`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return handleResponse(response);
+  },
+
+  getCacheStats: async () => {
+    const token = api.getAccessToken();
+    if (!token) throw new ApiError("No access token found", 401);
+    const response = await fetch(`${API_BASE_URL}/api/cache/stats`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return handleResponse(response);
+  },
+};

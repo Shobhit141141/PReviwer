@@ -70,7 +70,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const refreshUser = async () => {
+  const refreshUser = React.useCallback(async () => {
     try {
       setError(null);
       const userData = await api.getCurrentUser();
@@ -85,9 +85,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setError('Failed to load user data. Please try again.');
       }
     }
-  };
+  }, []);
 
-  const initializeAuth = async () => {
+  const initializeAuth = React.useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -124,7 +124,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [refreshUser]);
 
   // Handle GitHub auth redirect
   useEffect(() => {
@@ -157,27 +157,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     handleAuthRedirect();
-  }, []);
+  }, [initializeAuth]);
 
-  // Set up token refresh interval
-  useEffect(() => {
-    if (!isAuthenticated) return;
+  // // Set up token refresh interval
+  // useEffect(() => {
+  //   if (!isAuthenticated) return;
 
-    const refreshInterval = setInterval(async () => {
-      try {
-        const token = api.getAccessToken();
-        if (token) {
-          const refreshResponse = await api.refreshAccessToken();
-          api.setAccessToken(refreshResponse.access_token);
-          api.setRefreshToken(refreshResponse.refresh_token);
-        }
-      } catch (error) {
-        console.warn('Token refresh failed:', error);
-      }
-    }, 60 * 60 * 1000); // Refresh every 1 hour
+  //   const refreshInterval = setInterval(async () => {
+  //     try {
+  //       const token = api.getAccessToken();
+  //       if (token) {
+  //         const refreshResponse = await api.refreshAccessToken();
+  //         api.setAccessToken(refreshResponse.access_token);
+  //         api.setRefreshToken(refreshResponse.refresh_token);
+  //       }
+  //     } catch (error) {
+  //       console.warn('Token refresh failed:', error);
+  //     }
+  //   }, 60 * 60 * 1000); // Refresh every 1 hour
 
-    return () => clearInterval(refreshInterval);
-  }, [isAuthenticated]);
+  //   return () => clearInterval(refreshInterval);
+  // }, [isAuthenticated]);
 
   const value: AuthContextType = {
     user,

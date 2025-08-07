@@ -41,22 +41,6 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('editor');
 
-  // Fetch available template variables on component mount
-  useEffect(() => {
-    fetchTemplateVariables();
-  }, []);
-
-  // Auto-preview template changes
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (template.trim()) {
-        previewTemplate();
-      }
-    }, 500);
-
-    return () => clearTimeout(timeoutId);
-  }, [template]);
-
   const fetchTemplateVariables = async () => {
     try {
       const response = await fetch('/api/playground/template-variables', {
@@ -73,7 +57,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
     }
   };
 
-  const previewTemplate = async () => {
+  const previewTemplate = useCallback(async () => {
     if (!template.trim()) return;
 
     setLoading(true);
@@ -97,12 +81,28 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [template]);
 
-  const handleTemplateChange = (newTemplate: string) => {
+  // Fetch available template variables on component mount
+  useEffect(() => {
+    fetchTemplateVariables();
+  }, []);
+
+  // Auto-preview template changes
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (template.trim()) {
+        previewTemplate();
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [template, previewTemplate]);
+
+  const handleTemplateChange = useCallback((newTemplate: string) => {
     setTemplate(newTemplate);
     onTemplateChange?.(newTemplate);
-  };
+  }, [onTemplateChange]);
 
   const insertVariable = useCallback((variableKey: string) => {
     const textarea = document.querySelector('#template-textarea') as HTMLTextAreaElement;

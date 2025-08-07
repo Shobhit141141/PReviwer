@@ -141,6 +141,58 @@ export interface PRDetailsType {
   }[];
 }
 
+export interface Report {
+  _id: string;
+  prIdentifier: string;
+  prMetadata: string;
+  playgroundConfig: {
+    provider: string;
+    model: string;
+    systemPrompt: string;
+    userPrompt: string;
+    maxTokens?: number;
+    temperature?: number;
+  };
+  reportTitle: string;
+  savedAt: string;
+  updatedAt: string;
+  createdAt: string;
+}
+// Mock PR Report Data Type
+export interface MockPRReport {
+  _id: string;
+  summary: {
+    score: number;
+    complexity: string;
+    risk_level: string;
+    estimated_review_time: string;
+  };
+  analysis: {
+    code_quality: {
+      score: number;
+      issues: string[];
+      strengths: string[];
+    };
+    security: {
+      score: number;
+      vulnerabilities: string[];
+      recommendations: string[];
+    };
+    performance: {
+      score: number;
+      concerns: string[];
+      optimizations: string[];
+    };
+  };
+  files_analysis: Array<{
+    filename: string;
+    changes: { additions: number; deletions: number };
+    complexity: string;
+    issues: string[];
+    rating: number;
+  }>;
+  recommendations: string[];
+}
 // Auth Types
 export interface User {
   _id: string;

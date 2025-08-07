@@ -11,9 +11,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { BadgeInfo, ChevronDown, Eye, EyeOff } from "lucide-react";
+import { AlertTriangle, BadgeCheck, BadgeInfo, ChevronDown, CircleCheck, CircleX, Eye, EyeOff, Loader, ThumbsUp } from "lucide-react";
 import { MODELS, PROVIDERS } from "@/config/enums";
 import ReactMarkdown from "react-markdown";
+import toast from "react-hot-toast";
 
 const PR_VARIABLES = [
   { key: "title", label: "Title" },
@@ -39,17 +40,25 @@ export default function PlaygroundPage() {
   const [system_prompt, setSystemPrompt] = useState("");
   const [user_prompt, setUserPrompt] = useState("Please analyze this pull request based on the context provided in the system prompt. You can use the {{variables}} to access the pull request data. For example, you can use {{title}} to get the title of the pull request.");
   const [secondary_system_prompt, setSecondarySystemPrompt] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [testResult, setTestResult] = useState<{ message: string } | null>(null);
+  const [loading, ] = useState(false);
+  const [testResult, setTestResult] = useState<{ message: string, success: boolean } | null>(null);
   const [abResult, setAbResult] = useState<{ input: string; primary: string; secondary: string } | null>(null);
   const [promptResults, setPromptResults] = useState<{ type: string; prompt: string; response: string }[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestionPos, setSuggestionPos] = useState({ top: 0, left: 0 });
 
+  const [fetching, setFetching] = useState({
+    systemPrompt: false,
+    abTest: false,
+    savePrompts: false,
+    testConnection: false,
+    configureModel: false,
+    getModelConfig: false,
+  });
 
   const getModelConfig = async () => {
-    setLoading(true);
+    setFetching(prev => ({ ...prev, getModelConfig: true }));
     setError(null);
     try {
       const res = await playgroundApi.getPlaygroundConfig();
@@ -68,7 +77,7 @@ export default function PlaygroundPage() {
         setError("Unknown error");
       }
     } finally {
-      setLoading(false);
+      setFetching(prev => ({ ...prev, getModelConfig: false }));
     }
   };
 
@@ -78,8 +87,11 @@ export default function PlaygroundPage() {
 
   const handleConfigure = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setFetching(prev => ({ ...prev, configureModel: true }));
     setError(null);
+    // Clear previous results when starting configuration
+    setPromptResults([]);
+    setAbResult(null);
     try {
       const res = await playgroundApi.configureModel({
         llm_provider,
@@ -89,21 +101,26 @@ export default function PlaygroundPage() {
         secondary_system_prompt,
         user_prompt
       });
-      setTestResult({ message: res.message });
+      setTestResult({ message: res.message, success: res.success });
+      toast.success(res.message);
     } catch (err: unknown) {
+      toast.error("Failed to configure model. Please try again.");
       if (typeof err === "object" && err !== null) {
         setError((err as { data?: { error?: string }; message?: string }).data?.error || (err as { message?: string }).message || "Unknown error");
       } else {
         setError("Unknown error");
       }
     } finally {
-      setLoading(false);
+      setFetching(prev => ({ ...prev, configureModel: false }));
     }
   };
 
   const handleTestConnection = async () => {
-    setLoading(true);
+    setFetching(prev => ({ ...prev, testConnection: true }));
     setError(null);
+    // Clear previous results when starting connection test
+    setPromptResults([]);
+    setAbResult(null);
     try {
       const res = await playgroundApi.testModelConnection({
         llm_provider,
@@ -112,17 +129,20 @@ export default function PlaygroundPage() {
       });
       setTestResult({
         message: res.success
-          ? "✅ Connection successful!"
-          : "❌ Connection failed: " + res.error
+          ? "Connection successful!"
+          : "Connection failed: " + res.error,
+        success: res.success || false
       });
+      toast.success(res.success ? "Connection successful!" : "Connection failed: " + res.error);
     } catch (err: unknown) {
+      toast.error("Failed to test connection. Please try again.");
       if (typeof err === "object" && err !== null) {
         setError((err as { data?: { error?: string }; message?: string }).data?.error || (err as { message?: string }).message || "Unknown error");
       } else {
         setError("Unknown error");
       }
     } finally {
-      setLoading(false);
+      setFetching(prev => ({ ...prev, testConnection: false }));
     }
   };
   useEffect(() => {
@@ -146,8 +166,11 @@ export default function PlaygroundPage() {
     }
   };
   const handleTestSystemPrompt = async () => {
-    setLoading(true);
+    setFetching(prev => ({ ...prev, systemPrompt: true }));
     setError(null);
+    // Clear previous results when starting system prompt test
+    setTestResult(null);
+    setAbResult(null);
     try {
       const res = await playgroundApi.testSystemPrompt({
         llm_provider,
@@ -157,19 +180,23 @@ export default function PlaygroundPage() {
       });
       setPromptResults(res.results);
     } catch (err: unknown) {
+      toast.error("Failed to test system prompt. Please try again.");
       if (typeof err === "object" && err !== null) {
         setError((err as { data?: { error?: string }; message?: string }).data?.error || (err as { message?: string }).message || "Unknown error");
       } else {
         setError("Unknown error");
       }
     } finally {
-      setLoading(false);
+      setFetching(prev => ({ ...prev, systemPrompt: false }));
     }
   };
 
   const handleAbTest = async () => {
-    setLoading(true);
+    setFetching(prev => ({ ...prev, abTest: true }));
     setError(null);
+    // Clear previous results when starting A/B test
+    setTestResult(null);
+    setPromptResults([]);
     try {
       const res = await playgroundApi.abTestPrompts({
         llm_provider,
@@ -180,52 +207,91 @@ export default function PlaygroundPage() {
       });
       setAbResult(res);
     } catch (err: unknown) {
+      toast.error("Failed to run A/B test. Please try again.");
       if (typeof err === "object" && err !== null) {
         setError((err as { data?: { error?: string }; message?: string }).data?.error || (err as { message?: string }).message || "Unknown error");
       } else {
         setError("Unknown error");
       }
     } finally {
-      setLoading(false);
+      setFetching(prev => ({ ...prev, abTest: false }));
     }
   };
 
   const handleSavePrompts = async () => {
-    setLoading(true);
+    setFetching(prev => ({ ...prev, savePrompts: true }));
     setError(null);
+    // Clear previous results when saving prompts
+    setPromptResults([]);
+    setAbResult(null);
     try {
       const res = await playgroundApi.savePrompts({
         system_prompt,
         secondary_system_prompt
       });
-      setTestResult({ message: res.message });
+      setTestResult({ message: res.message, success: res.success });
+      toast.success(res.message);
     } catch (err: unknown) {
+      toast.error("Failed to save prompts. Please try again.");
       if (typeof err === "object" && err !== null) {
         setError((err as { data?: { error?: string }; message?: string }).data?.error || (err as { message?: string }).message || "Unknown error");
       } else {
         setError("Unknown error");
       }
     } finally {
-      setLoading(false);
+      setFetching(prev => ({ ...prev, savePrompts: false }));
     }
   };
 
+  const getStyleAndIcon = (type: string) => {
+    switch (type) {
+      case "best":
+        return {
+          icon: <BadgeCheck className="text-green-400 w-5 h-5" />,
+          color: "bg-green-800/20 border-green-600",
+          label: "Best",
+        };
+      case "good":
+        return {
+          icon: <ThumbsUp className="text-blue-400 w-5 h-5" />,
+          color: "bg-blue-800/20 border-blue-600",
+          label: "Good",
+        };
+      case "bad":
+        return {
+          icon: <AlertTriangle className="text-red-400 w-5 h-5" />,
+          color: "bg-red-800/10 border-red-600",
+          label: "Bad",
+        };
+      default:
+        return {
+          icon: null,
+          color: "bg-muted/10",
+          label: type,
+        };
+    }
+  };
 
   const [providerOpen, setProviderOpen] = useState(false);
   const [modelOpen, setModelOpen] = useState(false);
   const [, setActivePromptField] = useState<"system" | "secondary" | "user" | null>(null);
 
   return (
-    <div className="max-w-4xl mx-auto py-10 px-4 space-y-8">
+    <div className="max-w-6xl mx-auto py-6 pt-4 px-4 space-y-8">
       <div className="fixed pointer-events-none top-[10%] left-[5%] w-[400px] h-[400px] bg-purple-500 rounded-full blur-[160px] opacity-50"></div>
       <div className="fixed pointer-events-none top-[20%] right-[5%] w-[300px] h-[300px] bg-pink-500 rounded-full blur-[140px] opacity-35"></div>
       <div className="fixed pointer-events-none bottom-[15%] left-[20%] w-[350px] h-[350px] bg-blue-500 rounded-full blur-[150px] opacity-30"></div>
       <div className="fixed pointer-events-none bottom-[10%] right-[15%] w-[400px] h-[400px] bg-fuchsia-500 rounded-full blur-[180px] opacity-35"></div>
       <div className="fixed pointer-events-none top-[40%] left-[40%] w-[300px] h-[300px] bg-indigo-500 rounded-full blur-[120px] opacity-25"></div>
       <Card>
-        <CardHeader>
-          <CardTitle>🛠️ Model Configuration</CardTitle>
+
+        <CardHeader className="flex items-center gap-4">
+          <CardTitle className="text-xl">🛠️ Model Configuration</CardTitle>
+          {testResult?.message && (
+            <div className="text-green-400 text-sm border border-green-400 rounded-md flex items-center w-fit p-2 bg-green-500/20"><CircleCheck className="h-4 w-4 mr-1" />{testResult.message}</div>
+          )}
         </CardHeader>
+
         <CardContent>
           <form onSubmit={handleConfigure} className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -441,7 +507,7 @@ export default function PlaygroundPage() {
                   rows={8}
                 />
                 <p className="text-sm text-muted-foreground flex items-center">
-                  <BadgeInfo className=" h-4 "/>use <code className="text-yellow-500 mx-1">{"{{variable}} "}</code> to reference variables in your prompt.
+                  <BadgeInfo className=" h-4 " />use <code className="text-yellow-500 mx-1">{"{{variable}} "}</code> to reference variables in your prompt.
                 </p>
                 {showSuggestions && (
                   <ul
@@ -465,68 +531,84 @@ export default function PlaygroundPage() {
                   </ul>
                 )}
               </div>
-              <div className="flex flex-wrap gap-2 pt-2">
-                <Button type="submit" disabled={loading}>
-                  Save Config
+              <div className="flex max-sm:flex-wrap gap-2 pt-2 w-full">
+                <Button type="submit" disabled={loading || fetching.configureModel}>
+                  {fetching.configureModel && <Loader className="animate-spin" />} Save Config
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={handleTestConnection}
-                  disabled={loading}
+                  disabled={loading || fetching.testConnection}
                 >
-                  Test Connection
+                  {fetching.testConnection && <Loader className="animate-spin" /> } Test Connection
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={handleTestSystemPrompt}
-                  disabled={loading}
+                  disabled={loading || fetching.systemPrompt}
                 >
-                  Test Prompt
+                  {fetching.systemPrompt && <Loader className="animate-spin" />} Test Prompt
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={handleAbTest}
-                  disabled={loading}
+                  disabled={loading || fetching.abTest}
                 >
-                  A/B Test
+                  {fetching.abTest && <Loader className="animate-spin" />} A/B Test
                 </Button>
                 <Button
                   type="button"
                   variant="secondary"
                   onClick={handleSavePrompts}
-                  disabled={loading}
+                  disabled={loading || fetching.savePrompts}
                 >
-                  Save Prompts
+                  {fetching.savePrompts && <Loader className="animate-spin" />} Save Prompts
                 </Button>
               </div>
             </div>
-            {error && <div className="text-red-500 text-sm">{error}</div>}
-            {testResult?.message && (
-              <div className="text-green-600 text-sm">{testResult.message}</div>
-            )}
+            {error && <div className="text-red-400 text-sm border border-red-400 rounded-md flex items-center w-fit p-2 bg-red-500/20"><CircleX className="h-4 w-4 mr-1" />{error}</div>}
+
           </form>
         </CardContent>
       </Card>
 
-      {promptResults && (
+      {promptResults && promptResults.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>🧪 Prompt Test Results</CardTitle>
+            <CardTitle className="text-lg">🧪 Prompt Test Results</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {promptResults.map((r: unknown) => (
-              <div key={(r as { type: string }).type} className="border rounded p-3 bg-muted/30">
-                <div className="font-semibold">{(r as { type: string }).type}</div>
-                <div className="text-sm text-muted-foreground mb-1">
-                  <ReactMarkdown>{(r as { prompt: string }).prompt}</ReactMarkdown>
+            {promptResults.map((r: unknown) => {
+              const { type, prompt, response } = r as {
+                type: string;
+                prompt: string;
+                response: string;
+              };
 
+              const { icon, color, label } = getStyleAndIcon(type);
+
+              return (
+                <div key={type} className={`border rounded p-4 ${color}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    {icon}
+                    <span className="font-semibold text-lg">{label}</span>
+                  </div>
+
+                  <div className="text-sm text-muted-foreground mb-1 pb-4">
+                    <p className="text-white font-medium mb-1">Prompt:</p>
+                    <ReactMarkdown>{prompt}</ReactMarkdown>
+                  </div>
+
+                  <div className="whitespace-pre-wrap text-sm border-t-2 pt-4">
+                    <p className="text-white font-medium mb-1">Response:</p>
+                    <ReactMarkdown>{response}</ReactMarkdown>
+                  </div>
                 </div>
-                <div className="whitespace-pre-wrap text-sm">{(r as { response: string }).response}</div>
-              </div>
-            ))}
+              );
+            })}
           </CardContent>
         </Card>
       )}
@@ -538,16 +620,26 @@ export default function PlaygroundPage() {
           </CardHeader>
           <CardContent>
             <div className="mb-2 text-xs text-muted-foreground">
-              Input: {abResult.input}
+              Input: <ReactMarkdown>
+                {abResult.input}
+              </ReactMarkdown>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="border rounded p-3 bg-muted/30">
                 <div className="font-semibold">Primary Prompt</div>
-                <div className="whitespace-pre-wrap text-sm">{abResult.primary}</div>
+                <div className="whitespace-pre-wrap text-sm">
+                  <ReactMarkdown>
+                    {abResult.primary}
+                  </ReactMarkdown>
+                </div>
               </div>
               <div className="border rounded p-3 bg-muted/30">
                 <div className="font-semibold">Secondary Prompt</div>
-                <div className="whitespace-pre-wrap text-sm">{abResult.secondary}</div>
+                <div className="whitespace-pre-wrap text-sm">
+                  <ReactMarkdown>
+                    {abResult.secondary}
+                  </ReactMarkdown>
+                </div>
               </div>
             </div>
           </CardContent>

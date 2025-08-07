@@ -5,28 +5,34 @@ import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { Skeleton } from './ui/skeleton';
 import { formatDate } from '@/utils/formatDate';
+import { RefreshButton } from './RefreshButton';
 
 function UserStats() {
 
 
     const [userStats, setUserStats] = useState<UserStatsType | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
+
+    const fetchUserAnalytics = async () => {
+        try {
+            setLoading(true);
+            const res = await api.getUserAnalytics();
+            setUserStats(res);
+        } catch (error) {
+            console.error("Error setting user stats:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-
-        const fetchUserAnalytics = async () => {
-            try {
-                const res = await api.getUserAnalytics();
-
-                setUserStats(res);
-            } catch (error) {
-                console.error("Error setting user stats:", error);
-            }
-            finally {
-                setLoading(false);
-            }
-        };
         fetchUserAnalytics();
     }, []);
+
+    const handleRefreshComplete = async () => {
+        // Refetch user analytics data after cache is cleared
+        await fetchUserAnalytics();
+    };
 
     if (loading) {
         return (
@@ -38,7 +44,7 @@ function UserStats() {
 
                     </Skeleton>
 
-                    {[1,2,3,4].map((item) => (
+                    {[1, 2, 3, 4].map((item) => (
                         <Skeleton key={item} className=" rounded-xl p-6 border border-gray-800 max-sm:h-[101.5px]" id='glassmorphism'></Skeleton>
                     ))}
                 </div>
@@ -47,6 +53,15 @@ function UserStats() {
     }
     return (
         <div className="space-y-4">
+            {/* Header with refresh button */}
+            <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-semibold text-white">User Statistics</h3>
+                <RefreshButton
+                    onRefreshComplete={handleRefreshComplete}
+                    className="h-8 px-3 text-xs"
+                />
+            </div>
+
             {/* Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 {/* Avatar + Info Card */}

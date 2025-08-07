@@ -5,6 +5,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ui/theme-povider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Navbar from "@/components/navbar";
+import { Toaster } from "react-hot-toast";
 
 
 const getUbuntu = Ubuntu({
@@ -35,6 +36,8 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          
+          <Toaster /> 
           <AuthProvider>
             <Navbar />
             {children}
