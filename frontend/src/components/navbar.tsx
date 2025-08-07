@@ -4,23 +4,17 @@ import { Button } from "./ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loading } from "./ui/loading";
 import { Error } from "./ui/error";
-import { usePathname } from "next/navigation";
 
 function Navbar() {
   const { user, isLoading, isAuthenticated, error, login, logout, clearError } = useAuth();
-
-  const pathname = usePathname();
-
-  if (pathname === '/' || pathname === '/landing') {
-    return null;
-  }
+  
 
   const handleLogout = async () => {
     await logout();
   };
 
   return (
-    <header className="border-b border-gray-800 bg-gray-900/50 backdrop-blur-sm sticky top-0 z-50">
+    <header className={`bg-transparent  backdrop-blur-sm fixed top-0 z-50 w-full`}>
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">

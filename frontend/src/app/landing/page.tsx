@@ -21,7 +21,6 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 import WorkflowSection from "@/components/workflow";
-import { useAuth } from "@/contexts/AuthContext";
 
 export default function LandingPage() {
   const [isVisible, setIsVisible] = useState(false);
@@ -69,11 +68,8 @@ export default function LandingPage() {
     }
   ];
 
-
-  const {login} = useAuth();
-
   return (
-    <div className="min-h-screen text-white overflow-hidden w-full">
+    <div className="min-h-screen text-white overflow-hidden w-full ">
       {/* Background Effects */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-[10%] left-[5%] w-[400px] h-[400px] bg-blue-500 rounded-full blur-[160px] opacity-20 animate-pulse"></div>
@@ -82,7 +78,7 @@ export default function LandingPage() {
         <div className="absolute bottom-[10%] right-[15%] w-[400px] h-[400px] bg-cyan-500 rounded-full blur-[180px] opacity-15 animate-pulse delay-3000"></div>
       </div>
 
-      <header className=" backdrop-blur-sm fixed top-0 z-50 w-full">
+      {/* <header className=" backdrop-blur-sm fixed top-0 z-50 w-full">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -113,7 +109,7 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
-      </header>
+      </header> */}
       {/* Hero Section */}
       <section className="relative z-10 px-6 py-10 pt-20">
         <div className="max-w-7xl mx-auto text-center">
