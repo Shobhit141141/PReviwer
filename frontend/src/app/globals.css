@@ -173,3 +173,38 @@
   right: -10%;
   opacity: 0.2;
 }
+
+@keyframes shine {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.border-gradient {
+  background: linear-gradient(
+    120deg,
+    #00ffe0,
+    #8a2be2,
+    #00ffe0,
+    #8a2be2
+  );
+  background-size: 400% 400%;
+  animation: shine 3s linear infinite;
+  border-radius: 0.5rem;
+  padding: 3px;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: destination-out;
+}
+
+*{
+  scrollbar-width: thin;
+}

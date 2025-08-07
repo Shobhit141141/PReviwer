@@ -4,9 +4,16 @@ import { Button } from "./ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loading } from "./ui/loading";
 import { Error } from "./ui/error";
+import { usePathname } from "next/navigation";
 
 function Navbar() {
   const { user, isLoading, isAuthenticated, error, login, logout, clearError } = useAuth();
+
+  const pathname = usePathname();
+
+  if (pathname === '/' || pathname === '/landing') {
+    return null;
+  }
 
   const handleLogout = async () => {
     await logout();

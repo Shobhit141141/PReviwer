@@ -1,10 +1,5 @@
 "use client";
 import React from 'react';
-import {
-  GitPullRequest,
-  Users,
-  TrendingUp,
-} from 'lucide-react';
 import ActivePullRequests from '@/components/activePullRequests';
 import UserStats from '@/components/userStats';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,6 +8,7 @@ import WeeklyActivity from '@/components/weeklyActivity';
 import TopRepos from '@/components/topRepos';
 import RecentActivity from '@/components/recentActivity';
 import PlaygroundCard from '@/components/playgroundCard';
+import LandingPage from './landing/page';
 
 const Dashboard = () => {
   const { isAuthenticated } = useAuth();
@@ -28,10 +24,10 @@ const Dashboard = () => {
       {/* Header */}
 
 
-      <div className="container mx-auto px-6 py-8">
+      <div className="">
         <ProtectedRoute requireAuth={false}>
           {isAuthenticated ? (
-            <>
+            <div className='container mx-auto  px-6 py-8'>
               <UserStats />
 
               {/* Recent Activity - Full Width Horizontal */}
@@ -53,43 +49,9 @@ const Dashboard = () => {
                   <WeeklyActivity />
                 </div>
               </div>
-            </>
-          ) : (
-            // Welcome screen for unauthenticated users
-            <div className="flex items-center justify-center min-h-[60vh]">
-              <div className="text-center max-w-2xl">
-                <div className="mb-8">
-                  <img src="/git.png" alt="GitHub" className="w-24 h-24 mx-auto mb-6" />
-                  <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent">
-                    Welcome to PReviewer
-                  </h1>
-                  <p className="text-xl text-gray-300 mb-6">
-                    AI-powered PR review system that helps you manage and review pull requests efficiently.
-                  </p>
-                  <p className="text-gray-400 mb-8">
-                    Connect your GitHub account to get started and access your repositories, pull requests, and more.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                  <div className="p-6 border border-gray-700 rounded-lg">
-                    <GitPullRequest className="w-8 h-8 text-blue-400 mx-auto mb-3" />
-                    <h3 className="font-semibold mb-2">Smart PR Reviews</h3>
-                    <p className="text-sm text-gray-400">AI-powered analysis of your pull requests</p>
-                  </div>
-                  <div className="p-6 border border-gray-700 rounded-lg">
-                    <TrendingUp className="w-8 h-8 text-green-400 mx-auto mb-3" />
-                    <h3 className="font-semibold mb-2">Analytics</h3>
-                    <p className="text-sm text-gray-400">Track your development progress and metrics</p>
-                  </div>
-                  <div className="p-6 border border-gray-700 rounded-lg">
-                    <Users className="w-8 h-8 text-purple-400 mx-auto mb-3" />
-                    <h3 className="font-semibold mb-2">Team Collaboration</h3>
-                    <p className="text-sm text-gray-400">Enhanced collaboration tools for teams</p>
-                  </div>
-                </div>
-              </div>
             </div>
+          ) : (
+            <LandingPage/>
           )}
         </ProtectedRoute>
       </div>
