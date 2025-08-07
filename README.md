@@ -20,7 +20,7 @@
   ![GitHub Stars](https://img.shields.io/github/stars/Shobhit141141/previwer?style=for-the-badge)
   ![GitHub Forks](https://img.shields.io/github/forks/Shobhit141141/previwer?style=for-the-badge)
   ![GitHub Issues](https://img.shields.io/github/issues/Shobhit141141/previwer?style=for-the-badge)
-  ![License](https://img.shields.io/github/license/Shobhit141141/previwer?style=for-the-badge)
+  ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)
 </div>
 
 ---
