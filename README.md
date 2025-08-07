@@ -1,70 +1,405 @@
-<div align="center" style="display: flex; flex-direction: row; align-items: center;">
-    <img src="client/public/git.png" alt="PR Viewer Logo" width="100px" height="100px">
-    <h1 align="center" id="title" style="font-size: calc(100px / 2.5);">PR Viewer v1.5</h1>
-    <h2 align="center" id="subtitle" style="font-size: calc(100px / 3);">PR viewer is getting better, <span style="color: #4CAF50;">with new features!</span></h2>
+<div align="center">
+  <img src="frontend/public/git.png" alt="PReviwer Logo" width="120" height="120">
+  
+  # 🚀 PReviwer
+  
+  ### AI-Powered Pull Request Analysis Platform
+  
+  <p align="center">
+    <strong>Transform your code reviews with intelligent AI insights</strong><br>
+    Automated PR analysis • Real-time feedback • Seamless GitHub integration
+  </p>
+  
+  <p align="center">
+    <a href="https://prviwer.vercel.app">🌐 Live Demo</a> •
+    <a href="#features">✨ Features</a> •
+    <a href="#installation">🛠️ Installation</a> •
+    <a href="#usage">📖 Usage</a>
+  </p>
+  
+  ![GitHub Stars](https://img.shields.io/github/stars/your-username/previwer?style=for-the-badge)
+  ![GitHub Forks](https://img.shields.io/github/forks/your-username/previwer?style=for-the-badge)
+  ![GitHub Issues](https://img.shields.io/github/issues/your-username/previwer?style=for-the-badge)
+  ![License](https://img.shields.io/github/license/your-username/previwer?style=for-the-badge)
 </div>
 
-<p id="description">PR Viewer is a cutting-edge platform that analyzes Pull Requests (PRs) using an advanced AI model (Gemini) to provide insightful comments directly on the PR. It integrates with GitHub REST APIs and uses Octokit for interacting with repositories, offering seamless authentication via JWT and secure token storage with MongoDB and CryptoJS.</p>
+---
 
-<h2>🚀 Live at </h2>
+## 🎯 What is PReviwer?
 
-[frontend](https://prviwer.vercel.app)
+PReviwer is a cutting-edge platform that revolutionizes code reviews by leveraging advanced AI to analyze Pull Requests. It seamlessly integrates with GitHub to provide intelligent, actionable feedback that helps developers write better code, catch issues early, and maintain high code quality standards.
 
-[server](https://previwer-server.vercel.app)
+### ⚡ Why PReviwer?
 
-<h2>🛠️ Tech Stack</h2>
+- **🧠 AI-Powered Analysis**: Advanced machine learning models analyze your code for potential issues, security vulnerabilities, and performance optimizations
+- **⚡ Real-time Feedback**: Get instant insights as soon as you create a pull request
+- **🔒 Enterprise Security**: Built with security-first architecture including JWT authentication and encrypted token storage
+- **🎯 Actionable Insights**: Receive specific, implementable suggestions rather than generic feedback
+- **📊 Analytics Dashboard**: Track code quality metrics and improvement trends over time
 
-- **Frontend:** React + Vite js , Radix UI, Ant Design, React Router Dom
-- **Backend:** Node.js, Express.js, MongoDB, Octokit
-- **Authentication:** JWT (JSON Web Tokens)
-- **Token Encryption:** CryptoJS
-- **AI Model:** Gemini-1.5-flash
-  
-<h2>📄 Features</h2>
+---
 
-| Feature                                   | Description                                                                                                                             |
-|-------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
-| AI-Based PR Analysis 🧠                   | Uses the Gemini AI model to automatically analyze pull requests, generating insightful feedback and suggestions to improve code quality. |
-| Seamless GitHub Integration 🌐            | Fully integrated with GitHub REST APIs and Octokit, enabling users to easily fetch, view, and comment on PRs without leaving the platform.|
-| Automated PR Comments 📝                  | Automatically posts AI-generated comments on the PRs, highlighting areas of improvement and potential issues, improving code review workflows.|
-| Secure JWT Authentication 🔐             | Ensures secure user authentication using JWT, giving developers peace of mind when interacting with their GitHub repositories.            |
-| Encrypted Token Storage 🔑               | PR Viewer uses CryptoJS to store encrypted tokens in MongoDB, ensuring that sensitive information is securely managed.                    |
-| Responsive Design 📱                      | Optimized for both desktop and mobile devices, making it easy to review PRs and manage your repositories on the go.                       |
+## ✨ Features
 
+<table>
+  <tr>
+    <td>
+      <img src="https://img.icons8.com/fluency/48/artificial-intelligence.png" width="40"/>
+      <h3>🧠 AI-Powered Analysis</h3>
+      <p>Uses advanced AI models (OpenAI, Anthropic, Google) to automatically analyze pull requests and generate insightful feedback on code quality, security, and performance.</p>
+    </td>
+    <td>
+      <img src="https://img.icons8.com/fluency/48/github.png" width="40"/>
+      <h3>🌐 GitHub Integration</h3>
+      <p>Seamlessly integrates with GitHub REST APIs using Octokit, enabling users to fetch, analyze, and comment on PRs directly from the platform.</p>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <img src="https://img.icons8.com/fluency/48/security-configuration.png" width="40"/>
+      <h3>🔒 Security First</h3>
+      <p>Enterprise-grade security with JWT authentication, encrypted token storage using CryptoJS, and secure MongoDB integration.</p>
+    </td>
+    <td>
+      <img src="https://img.icons8.com/fluency/48/code.png" width="40"/>
+      <h3>🎮 Interactive Playground</h3>
+      <p>Test and configure AI models with custom system prompts, A/B test different configurations, and fine-tune analysis parameters.</p>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <img src="https://img.icons8.com/fluency/48/cache.png" width="40"/>
+      <h3>⚡ Redis Caching</h3>
+      <p>Lightning-fast performance with intelligent Redis caching, reducing API calls and improving response times significantly.</p>
+    </td>
+    <td>
+      <img src="https://img.icons8.com/fluency/48/analytics.png" width="40"/>
+      <h3>📊 Analytics Dashboard</h3>
+      <p>Comprehensive analytics showing code quality trends, PR statistics, and improvement metrics with beautiful visualizations.</p>
+    </td>
+  </tr>
+</table>
 
-## 📦 Installation
+---
 
-1. Clone the repository:
+## 🏗️ Architecture
 
-    ```bash
-    git clone https://github.com/your-username/prviewer.git
-    ```
+```mermaid
+graph TB
+    A[Frontend - Next.js] --> B[API Gateway]
+    B --> C[Authentication Service]
+    B --> D[GitHub Service]
+    B --> E[AI Analysis Service]
+    
+    C --> F[MongoDB - User Data]
+    D --> G[GitHub API]
+    E --> H[OpenAI/Anthropic/Google AI]
+    
+    B --> I[Redis Cache]
+    B --> J[Report Generation]
+    
+    style A fill:#61dafb
+    style F fill:#47a248
+    style G fill:#333
+    style H fill:#ff6b6b
+    style I fill:#dc382d
+```
 
-2. Set up environment variables:
+---
 
-    Create a `.env` file in the root directory and add the following:
+## 🛠️ Tech Stack
 
-    ```bash
-    GITHUB_CLIENT_ID=your_github_client_id
-    GITHUB_CLIENT_SECRET=your_github_client_secret
-    JWT_SECRET=your_jwt_secret
-    MONGODB_URI=your_mongodb_uri
-    ENCRYPTION_KEY=your_enc_key
-    GEMINI_API_KEY=your_gemini_key
-    ```
+### Frontend
+- **Framework**: Next.js 14 with TypeScript
+- **Styling**: Tailwind CSS + Shadcn/ui
+- **State Management**: React Context + Hooks
+- **Icons**: Lucide React
+- **Charts**: Recharts
 
+### Backend
+- **Runtime**: Node.js with Express.js
+- **Database**: MongoDB with Mongoose
+- **Caching**: Redis for performance optimization
+- **Authentication**: JWT with GitHub OAuth
+- **Security**: CryptoJS for token encryption
 
+### AI & External APIs
+- **AI Models**: OpenAI GPT-4, Anthropic Claude, Google Gemini
+- **GitHub Integration**: Octokit for GitHub REST API
+- **File Processing**: Advanced PR diff analysis
 
-<h2>🧪 Usage</h2>
+### DevOps & Deployment
+- **Frontend Hosting**: Vercel
+- **Backend Hosting**: Vercel Serverless Functions
+- **Database**: MongoDB Atlas
+- **Caching**: Redis Cloud
 
-1. **Login with GitHub**: Users can securely log in using their GitHub credentials.
-2. **Analyze PRs**: The AI model will analyze your open PRs and provide automated suggestions for improvement.
-3. **Post Comments**: With a single click, post AI-generated feedback directly onto the PR using GitHub's REST API.
+---
 
+## 🚀 Quick Start
 
-<h2>🛡️ Security</h2>
+### Prerequisites
 
-- PR Viewer leverages **JWT authentication** for secure login.
-- **CryptoJS** is used to encrypt tokens before storing them in **MongoDB**, ensuring sensitive data is protected.
+- Node.js 18+ and npm/yarn
+- MongoDB database
+- Redis instance
+- GitHub OAuth App
+- AI API keys (OpenAI/Anthropic/Google)
 
+### Installation
 
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-username/previwer.git
+   cd previwer
+   ```
+
+2. **Install dependencies**
+   ```bash
+   # Install backend dependencies
+   cd backend
+   npm install
+   
+   # Install frontend dependencies
+   cd ../frontend
+   npm install
+   ```
+
+3. **Environment Configuration**
+
+   Create `.env` files in both `backend` and `frontend` directories:
+
+   **Backend `.env`:**
+   ```env
+   # Database
+   MONGODB_URI=mongodb+srv://your-mongodb-uri
+   REDIS_URL=redis://your-redis-url
+   
+   # Authentication
+   JWT_SECRET=your-super-secret-jwt-key
+   GITHUB_CLIENT_ID=your-github-client-id
+   GITHUB_CLIENT_SECRET=your-github-client-secret
+   
+   # Security
+   ENCRYPTION_KEY=your-32-char-encryption-key
+   
+   # AI APIs
+   OPENAI_API_KEY=your-openai-key
+   ANTHROPIC_API_KEY=your-anthropic-key
+   GOOGLE_API_KEY=your-google-key
+   
+   # Server
+   PORT=5000
+   NODE_ENV=development
+   ```
+
+   **Frontend `.env.local`:**
+   ```env
+   NEXT_PUBLIC_API_URL=http://localhost:5000/api
+   NEXTAUTH_SECRET=your-nextauth-secret
+   NEXTAUTH_URL=http://localhost:3000
+   ```
+
+4. **Run the application**
+   ```bash
+   # Start backend (in backend directory)
+   npm run dev
+   
+   # Start frontend (in frontend directory) 
+   npm run dev
+   ```
+
+5. **Access the application**
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:5000
+
+---
+
+## 📖 Usage
+
+### Getting Started
+
+1. **🔐 Authentication**
+   - Visit the application and click "Login with GitHub"
+   - Authorize PReviwer to access your GitHub repositories
+   - You'll be redirected to your personalized dashboard
+
+2. **⚙️ Configure AI Models**
+   - Navigate to the Playground section
+   - Configure your preferred AI provider (OpenAI, Anthropic, or Google)
+   - Set up system prompts and test configurations
+   - Save your optimal settings
+
+3. **📊 Analyze Pull Requests**
+   - Go to your Dashboard to see your GitHub statistics
+   - Select any repository and PR for analysis
+   - View AI-generated insights and recommendations
+   - Generate detailed reports with actionable feedback
+
+4. **🎮 Advanced Features**
+   - Use the Playground to A/B test different AI configurations
+   - Generate templated reports with custom variables
+   - View analytics and trends in your code quality
+   - Export reports for team sharing
+
+### API Endpoints
+
+<details>
+<summary>Click to view API documentation</summary>
+
+#### Authentication
+- `POST /api/auth/github` - GitHub OAuth login
+- `POST /api/auth/refresh` - Refresh JWT token
+- `POST /api/auth/logout` - Logout user
+
+#### GitHub Integration
+- `GET /api/github/user` - Get user profile
+- `GET /api/github/repos` - Get user repositories
+- `GET /api/github/pr/:owner/:repo/:number` - Get PR details
+- `POST /api/github/analyze` - Analyze PR with AI
+
+#### Playground
+- `GET /api/playground/config` - Get playground configuration
+- `POST /api/playground/configure` - Configure AI model
+- `POST /api/playground/test` - Test system prompt
+- `POST /api/playground/generate` - Generate analysis report
+
+#### Cache Management
+- `POST /api/cache/clear-analysis-data` - Clear analysis cache
+- `DELETE /api/cache/pr/:owner/:repo/:number` - Clear specific PR cache
+
+</details>
+
+---
+
+## 🔧 Configuration
+
+### AI Model Configuration
+
+PReviwer supports multiple AI providers. Configure them in the Playground:
+
+```javascript
+// Example configuration
+{
+  "llm_provider": "openai",
+  "llm_model": "gpt-4",
+  "temperature": 0.7,
+  "max_tokens": 2000,
+  "system_prompt": "You are an expert code reviewer...",
+  "secondary_system_prompt": "Focus on security and performance..."
+}
+```
+
+### Custom System Prompts
+
+Create powerful analysis templates with variables:
+
+```
+Analyze this {{PR_TYPE}} pull request for {{REPO_NAME}}.
+Files changed: {{FILES_CHANGED}}
+Lines added: {{LINES_ADDED}}
+Lines removed: {{LINES_REMOVED}}
+
+Focus areas:
+- Code quality and best practices
+- Security vulnerabilities  
+- Performance implications
+- Testing coverage
+```
+
+---
+
+## 🔒 Security
+
+PReviwer implements enterprise-grade security measures:
+
+- **🛡️ JWT Authentication**: Secure token-based authentication with GitHub OAuth
+- **🔐 Token Encryption**: All tokens encrypted using CryptoJS before MongoDB storage
+- **🚫 Data Privacy**: No code is stored permanently; only analysis results are cached
+- **🔄 Auto Token Refresh**: Automatic token refresh for uninterrupted service
+- **⚡ Rate Limiting**: Built-in rate limiting to prevent API abuse
+- **🌐 CORS Protection**: Properly configured CORS for secure cross-origin requests
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+### Development Workflow
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Make your changes and add tests
+4. Commit your changes: `git commit -m 'Add amazing feature'`
+5. Push to the branch: `git push origin feature/amazing-feature`
+6. Open a Pull Request
+
+### Code Style
+
+- Follow TypeScript best practices
+- Use Prettier for code formatting
+- Write meaningful commit messages
+- Add tests for new features
+
+---
+
+## 📊 Roadmap
+
+### 🎯 Current Version (v2.0)
+- ✅ Multi-AI provider support
+- ✅ Advanced playground configuration
+- ✅ Redis caching implementation
+- ✅ Comprehensive analytics dashboard
+- ✅ Template-based report generation
+
+### 🚀 Upcoming Features (v2.1)
+- 🔄 Real-time PR monitoring
+- 📱 Mobile app development
+- 🤖 Custom AI model training
+- 👥 Team collaboration features
+- 📈 Advanced metrics and insights
+
+### 🌟 Future Plans (v3.0)
+- 🔗 IDE integrations (VS Code, IntelliJ)
+- 🌍 Multi-platform support (GitLab, Bitbucket)
+- 🧪 Automated testing suggestions
+- 🎨 Custom UI themes
+- 📚 Knowledge base integration
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🙏 Acknowledgments
+
+- **GitHub** for providing excellent APIs and OAuth integration
+- **OpenAI, Anthropic, Google** for powerful AI models
+- **Vercel** for seamless deployment and hosting
+- **MongoDB** for reliable database services
+- **Redis** for high-performance caching
+
+---
+
+## 📞 Support
+
+- 📧 **Email**: support@previwer.com
+- 💬 **Discord**: [Join our community](https://discord.gg/previwer)
+- 🐛 **Issues**: [GitHub Issues](https://github.com/your-username/previwer/issues)
+- 📖 **Documentation**: [Full Documentation](https://docs.previwer.com)
+
+---
+
+<div align="center">
+  <p>
+    <strong>Made with ❤️ by the PReviwer Team</strong>
+  </p>
+  <p>
+    <a href="https://prviwer.vercel.app">Try PReviwer Today</a> • 
+    <a href="https://github.com/your-username/previwer">Star on GitHub</a>
+  </p>
+</div>
