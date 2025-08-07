@@ -17,10 +17,10 @@
     <a href="#usage">📖 Usage</a>
   </p>
   
-  ![GitHub Stars](https://img.shields.io/github/stars/your-username/previwer?style=for-the-badge)
-  ![GitHub Forks](https://img.shields.io/github/forks/your-username/previwer?style=for-the-badge)
-  ![GitHub Issues](https://img.shields.io/github/issues/your-username/previwer?style=for-the-badge)
-  ![License](https://img.shields.io/github/license/your-username/previwer?style=for-the-badge)
+  ![GitHub Stars](https://img.shields.io/github/stars/Shobhit141141/previwer?style=for-the-badge)
+  ![GitHub Forks](https://img.shields.io/github/forks/Shobhit141141/previwer?style=for-the-badge)
+  ![GitHub Issues](https://img.shields.io/github/issues/Shobhit141141/previwer?style=for-the-badge)
+  ![License](https://img.shields.io/github/license/Shobhit141141/previwer?style=for-the-badge)
 </div>
 
 ---
@@ -324,7 +324,7 @@ PReviwer implements enterprise-grade security measures:
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+We welcome contributions! 
 
 ### Development Workflow
 
@@ -387,19 +387,17 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- 📧 **Email**: support@previwer.com
-- 💬 **Discord**: [Join our community](https://discord.gg/previwer)
-- 🐛 **Issues**: [GitHub Issues](https://github.com/your-username/previwer/issues)
-- 📖 **Documentation**: [Full Documentation](https://docs.previwer.com)
+- 📧 **Email**: shobhit141142@gmail.com
+- 🐛 **Issues**: [GitHub Issues](https://github.com/Shobhit141141/previwer/issues)
 
 ---
 
 <div align="center">
   <p>
-    <strong>Made with ❤️ by the PReviwer Team</strong>
+    <strong>Made with ⚡ by Shobhit Tiwari</strong>
   </p>
   <p>
     <a href="https://prviwer.vercel.app">Try PReviwer Today</a> • 
-    <a href="https://github.com/your-username/previwer">Star on GitHub</a>
+    <a href="https://github.com/Shobhit141141/previwer">Star on GitHub</a>
   </p>
 </div>
