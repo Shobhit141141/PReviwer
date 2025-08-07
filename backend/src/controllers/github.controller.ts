@@ -3,7 +3,9 @@ import { Request, Response } from 'express';
 import User from '../models/user.model.js';
 import { decrypt, encrypt } from '../utils/encrypt_decrypt.js';
 import { CONSTANTS } from '../config/constants.js';
-import { logDebug, logError } from '../utils/logger.js';
+import { logError } from '../utils/logger.js';
+import { getRedisCache, setRedisCache, CACHE_TTL } from '../config/redis.js';
+import Playground from '../models/playground.model.js';
 
 const CLIENT_ID = CONSTANTS.GITHUB_CLIENT_ID;
 const CLIENT_SECRET = CONSTANTS.GITHUB_CLIENT_SECRET;
@@ -92,6 +94,36 @@ export const githubCallback = async (req: Request, res: Response) => {
       );
     }
 
+
+    // Also cache the user data in Redis
+    try {
+      await setRedisCache(`user:${user?._id}`, JSON.stringify(user), CACHE_TTL.LONG);  
+    } catch (cacheError) {
+      logError(
+        'Error caching user data after GitHub login',
+        cacheError instanceof Error ? cacheError : new Error(String(cacheError)),
+      );
+    }
+
+    // save a default playgroundConfig for first time users to avoid errors
+    if (isFirstTime && user?._id) {
+  
+
+      const defaultPlaygroundConfig = {
+        userId: user._id,
+        system_prompt: 'You are a helpful assistant.',
+        secondary_system_prompt: '',
+        llm_model: 'gpt-3.5-turbo',
+        llm_provider: 'openai',
+        llm_api_key: '',
+        temperature: 0.7,
+        max_tokens: 1000,
+        isConnectionValid: false,
+      };
+
+      await Playground.create(defaultPlaygroundConfig);
+    }
+
     const userDataEncoded = encodeURIComponent(JSON.stringify(user));
     const successUrl = `${FRONTEND_URL}?user=${userDataEncoded}&token=${access_token}&refresh_token=${refresh_token}&expires_in=${expires_in}&refresh_token_expires_in=${refresh_token_expires_in}&isFirstTime=${isFirstTime}`;
     res.redirect(successUrl);
@@ -117,7 +149,16 @@ export const refreshAccessToken = async (req: Request, res: Response) => {
     return;
   }
 
+  const cacheKey = `refresh_token:${refreshToken}`;
+
   try {
+    // Check cache first to prevent unnecessary database queries
+    const cachedResult = await getRedisCache(cacheKey);
+    if (cachedResult) {
+      res.json(JSON.parse(cachedResult));
+      return;
+    }
+
     // Find all users with a non-null github_refresh_token and compare decrypted tokens
     const users = await User.find({ github_refresh_token: { $exists: true, $ne: null } });
     let user = null;
@@ -154,7 +195,12 @@ export const refreshAccessToken = async (req: Request, res: Response) => {
       return;
     }
 
-    res.json({ access_token, refresh_token: newRefreshToken });
+    const result = { access_token, refresh_token: newRefreshToken };
+
+    // Cache the result for a short time (5 minutes) to handle rapid successive calls
+    await setRedisCache(cacheKey, JSON.stringify(result), CACHE_TTL.SHORT);
+
+    res.json(result);
   } catch (err: any) {
     logError('Error refreshing GitHub token:', err);
 

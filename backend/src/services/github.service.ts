@@ -1,8 +1,15 @@
 import { Request, Response } from 'express';
 import { Octokit } from '@octokit/rest';
-import { logDebug, logError } from '../utils/logger.js';
+import { logDebug, logError, logger } from '../utils/logger.js';
 import axios from 'axios';
-
+import {
+  getRedisCache,
+  setRedisCache,
+  deleteRedisCache,
+  clearRedisCachePattern,
+  CACHE_TTL,
+  connectToRedis,
+} from '../config/redis.js';
 /**
  * Get active pull requests for the authenticated user
  * /github/active-pull-requests - PRIVATE
@@ -19,7 +26,16 @@ export const getActivePullRequests = async (req: Request, res: Response) => {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
+  const cacheKey = `active_prs:${username}`;
+
   try {
+    // Check cache first
+    const cachedData = await getRedisCache(cacheKey);
+    if (cachedData) {
+      res.status(200).json(JSON.parse(cachedData));
+      return;
+    }
+
     const octokit = new Octokit({ auth: accessToken });
 
     const repos = await octokit.paginate(octokit.rest.repos.listForAuthenticatedUser, {
@@ -83,6 +99,9 @@ export const getActivePullRequests = async (req: Request, res: Response) => {
     const allPRsNested = await Promise.all(repoPRFetches);
     const allPRs = allPRsNested.flat();
 
+    // Cache for 10 minutes - PRs change frequently
+    await setRedisCache(cacheKey, JSON.stringify(allPRs), CACHE_TTL.SHORT * 2);
+
     res.status(200).json(allPRs);
   } catch (err: any) {
     logError('Error fetching active PRs:', err);
@@ -102,15 +121,29 @@ export const getWeeklyActivity = async (req: Request, res: Response) => {
   const accessToken = req.accessToken;
   const username = req.user?.username;
 
-  const today = new Date();
-  const lastWeek = new Date();
-  lastWeek.setDate(today.getDate() - 6);
+  if (!accessToken || !username) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
 
-  const headers = {
-    Authorization: `Bearer ${accessToken}`,
-  };
+  const cacheKey = `weekly_activity:${username}`;
 
   try {
+    // Check cache first
+    const cachedData = await getRedisCache(cacheKey);
+    if (cachedData) {
+      res.json(JSON.parse(cachedData));
+      return;
+    }
+
+    const today = new Date();
+    const lastWeek = new Date();
+    lastWeek.setDate(today.getDate() - 6);
+
+    const headers = {
+      Authorization: `Bearer ${accessToken}`,
+    };
+
     const query = `
       query {
         user(login: "${username}") {
@@ -191,7 +224,12 @@ export const getWeeklyActivity = async (req: Request, res: Response) => {
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
     );
 
-    res.json({ dailySummary });
+    const result = { dailySummary };
+
+    // Cache for 1 hour - weekly activity doesn't change very frequently
+    await setRedisCache(cacheKey, JSON.stringify(result), CACHE_TTL.LONG);
+
+    res.json(result);
   } catch (err: any) {
     logError('Error fetching weekly activity:', err);
     res.status(500).json({
@@ -219,7 +257,16 @@ export const getRepoStats = async (req: Request, res: Response) => {
     return;
   }
 
+  const cacheKey = `repo_stats:${username}`;
+
   try {
+    // Check cache first
+    const cachedData = await getRedisCache(cacheKey);
+    if (cachedData) {
+      res.json(JSON.parse(cachedData));
+      return;
+    }
+
     const octokit = new Octokit({ auth: accessToken });
 
     const { data: repos } = await octokit.rest.repos.listForUser({
@@ -284,6 +331,9 @@ export const getRepoStats = async (req: Request, res: Response) => {
       .sort((a, b) => (b?.score ?? 0) - (a?.score ?? 0))
       .slice(0, 3);
 
+    // Cache for 1 hour - repo stats don't change very frequently
+    await setRedisCache(cacheKey, JSON.stringify(filtered), CACHE_TTL.LONG);
+
     res.json(filtered);
   } catch (error: any) {
     logError('GitHub API error:', error);
@@ -308,7 +358,16 @@ export const getRecentActivity = async (req: Request, res: Response) => {
     return;
   }
 
+  const cacheKey = `recent_activity:${username}`;
+
   try {
+    // Check cache first
+    const cachedData = await getRedisCache(cacheKey);
+    if (cachedData) {
+      res.status(200).json(JSON.parse(cachedData));
+      return;
+    }
+
     const octokit = new Octokit({ auth: accessToken });
 
     // Get user's recent events
@@ -386,7 +445,12 @@ export const getRecentActivity = async (req: Request, res: Response) => {
         }
       });
 
-    res.status(200).json({ recentActivities });
+    const result = { recentActivities };
+
+    // Cache for 15 minutes - recent activity changes frequently
+    await setRedisCache(cacheKey, JSON.stringify(result), CACHE_TTL.MEDIUM);
+
+    res.status(200).json(result);
   } catch (err: any) {
     logError('Error fetching recent activity:', err);
     res.status(500).json({ error: 'Failed to fetch recent activity', details: err.message });
@@ -404,9 +468,26 @@ export const getRecentActivity = async (req: Request, res: Response) => {
 export const getPRDetails = async (req: Request, res: Response) => {
   const accessToken = req.accessToken;
   const { owner, repo, prNumber } = req.params;
+
   if (!owner || !repo || !prNumber) {
     res.status(400).json({ error: 'Missing required parameters: owner, repo, or prNumber' });
     return;
+  }
+  const cacheKey = `pr_details:${owner}:${repo}:${prNumber}`;
+
+  try {
+    // Try to get user data from cache
+    const cachedPR = await getRedisCache(cacheKey);
+    if (cachedPR) {
+      logger(' CACHE ', `PR data served from cacheKey: ${cacheKey}`, 'green');
+      res.json(JSON.parse(cachedPR));
+      return;
+    }
+  } catch (cacheError) {
+    logError(
+      'Redis cache read error for getPRDetails',
+      cacheError instanceof Error ? cacheError : new Error(String(cacheError)),
+    );
   }
 
   try {
@@ -564,7 +645,17 @@ export const getPRDetails = async (req: Request, res: Response) => {
         submitted_at: review.submitted_at,
       })),
     };
-
+    // Cache the PR details for 15 minutes (900 seconds)
+    try {
+      await setRedisCache(cacheKey, JSON.stringify(prDetails), CACHE_TTL.MEDIUM);
+      logger(' CACHE ', `PR details cached for ID: ${prNumber}`, 'blue');
+    } catch (cacheError) {
+      logError(
+        'Redis cache write error for getPRDetails',
+        cacheError instanceof Error ? cacheError : new Error(String(cacheError)),
+      );
+    }
+    logger(' CACHE ', `PR details cached for ID: ${prNumber}`, 'blue');
     res.status(200).json(prDetails);
   } catch (err: any) {
     // logError('Error fetching PR details:', err);

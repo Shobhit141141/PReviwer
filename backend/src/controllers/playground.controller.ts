@@ -5,6 +5,14 @@ import { PR_TEMPLATES } from '../data/prTemplates.js';
 import { decrypt, encrypt } from '../utils/encrypt_decrypt.js';
 import { logError } from '../utils/logger.js';
 import { TemplateVariable, TemplateValidation } from '../types/index.js';
+import {
+  getRedisCache,
+  setRedisCache,
+  deleteRedisCache,
+  clearRedisCachePattern,
+  CACHE_TTL,
+  connectToRedis,
+} from '../config/redis.js';
 
 // Available template variables for PR analysis
 const AVAILABLE_TEMPLATE_VARIABLES: Record<string, TemplateVariable> = {
@@ -113,6 +121,8 @@ export const configureModel = async (req: Request, res: Response): Promise<void>
       res.status(401).json({ error: 'Unauthorized: User not found' });
       return;
     }
+
+    const userId = req.user.id;
     const configData = {
       llm_provider,
       llm_model,
@@ -123,10 +133,14 @@ export const configureModel = async (req: Request, res: Response): Promise<void>
     };
 
     const savedConfig = await Playground.findOneAndUpdate(
-      { user: req.user.id },
-      { $set: configData, $setOnInsert: { user: req.user.id } },
+      { user: userId },
+      { $set: configData, $setOnInsert: { user: userId } },
       { new: true, upsert: true },
     );
+
+    // Clear the cache since configuration has changed
+    await deleteRedisCache(`playground_config:${userId}`);
+
     res.status(200).json({ message: 'Model configured successfully', data: savedConfig });
   } catch (err) {
     res.status(400).json({ error: 'Failed to configure model', details: err });
@@ -161,7 +175,18 @@ export const testModelConnection = async (req: Request, res: Response): Promise<
  */
 export const testSystemPrompt = async (req: Request, res: Response): Promise<void> => {
   const { system_prompt, llm_provider, llm_model, llm_api_key } = req.body;
+
+  // Create a cache key based on the test parameters
+  const cacheKey = `test_prompt:${Buffer.from(system_prompt + llm_provider + llm_model).toString('base64')}`;
+
   try {
+    // Check cache for recent test results
+    const cachedResult = await getRedisCache(cacheKey);
+    if (cachedResult) {
+      res.status(200).json(JSON.parse(cachedResult));
+      return;
+    }
+
     const results = await Promise.all(
       Object.entries(PR_TEMPLATES).map(async ([type, prompt]) => {
         const response = await useLLMConnection({
@@ -174,7 +199,13 @@ export const testSystemPrompt = async (req: Request, res: Response): Promise<voi
         return { type, prompt, response };
       }),
     );
-    res.status(200).json({ results });
+
+    const result = { results };
+
+    // Cache for 1 hour - prompt tests don't change frequently for same inputs
+    await setRedisCache(cacheKey, JSON.stringify(result), CACHE_TTL.LONG);
+
+    res.status(200).json(result);
   } catch (err: any) {
     logError('Prompt testing error:', err);
     res.status(500).json({ error: 'Prompt testing failed', details: err });
@@ -225,6 +256,7 @@ export const abTestPrompts = async (req: Request, res: Response): Promise<void> 
  * Save the system prompts for the user
  * /playground/save-prompts - PRIVATE
  * This function saves the user's system prompts to the database.
+ * For first-time users, it creates a new playground configuration.
  * @param req - Request object containing system prompts
  * @param res - Response object to send the save result
  * @returns { message: 'Prompts updated', data: updatedConfig }
@@ -237,12 +269,36 @@ export const savePrompts = async (req: Request, res: Response): Promise<void> =>
       res.status(401).json({ error: 'Unauthorized: User not found' });
       return;
     }
+
+    const userId = req.user.id;
+
+    // Use findOneAndUpdate with upsert to handle first-time users
     const updated = await Playground.findOneAndUpdate(
-      { user: req.user.id },
-      { system_prompt, secondary_system_prompt, user_prompt },
-      { new: true },
+      { user: userId },
+      {
+        system_prompt,
+        secondary_system_prompt,
+        user_prompt,
+        $setOnInsert: {
+          user: userId,
+          llm_provider: 'openai',
+          llm_model: 'gpt-3.5-turbo',
+          temperature: 0.7,
+          max_tokens: 1000,
+          isConnectionValid: false,
+        },
+      },
+      { new: true, upsert: true },
     );
-    res.status(200).json({ message: 'Prompts updated', data: updated });
+
+    // Clear the cache since prompts have changed
+    await deleteRedisCache(`playground_config:${userId}`);
+
+    res.status(200).json({
+      message: 'Prompts updated successfully',
+      data: updated,
+      isFirstTime: !updated.llm_api_key, // If no API key, likely first time
+    });
   } catch (err) {
     res.status(400).json({ error: 'Failed to update prompts', details: err });
   }
@@ -252,9 +308,10 @@ export const savePrompts = async (req: Request, res: Response): Promise<void> =>
  * Get the user's playground configuration
  * /playground/config - PRIVATE
  * This function retrieves the user's playground configuration from the database.
+ * For first-time users, it returns default configuration values.
  * @param req - Request object containing user information
  * @param res - Response object to send the configuration data
- * @returns { data: PlaygroundConfig }
+ * @returns { data: PlaygroundConfig, isFirstTime: boolean }
  */
 export const getPlaygroundConfig = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -262,16 +319,58 @@ export const getPlaygroundConfig = async (req: Request, res: Response): Promise<
       res.status(401).json({ error: 'Unauthorized: User not found' });
       return;
     }
-    const config = await Playground.findOne({ user: req.user.id });
-    if (!config) {
-      res.status(404).json({ error: 'Configuration not found' });
+
+    const userId = req.user.id;
+    const cacheKey = `playground_config:${userId}`;
+
+    // Check cache first
+    const cachedConfig = await getRedisCache(cacheKey);
+    if (cachedConfig) {
+      const configObj = JSON.parse(cachedConfig);
+      if (configObj.llm_api_key) {
+        configObj.llm_api_key = decrypt(configObj.llm_api_key);
+      }
+      res.status(200).json({ data: configObj, isFirstTime: false });
       return;
     }
+
+    const config = await Playground.findOne({ user: userId });
+
+    if (!config) {
+      // Return default configuration for first-time users
+      const defaultConfig = {
+        user: userId,
+        user_prompt:
+          'Please analyze this pull request based on the context provided in the system prompt.',
+        system_prompt: 'You are a helpful assistant.',
+        secondary_system_prompt: '',
+        llm_model: 'gpt-3.5-turbo',
+        llm_provider: 'openai',
+        llm_api_key: '',
+        temperature: 0.7,
+        max_tokens: 1000,
+        isConnectionValid: false,
+      };
+
+      res.status(200).json({
+        data: defaultConfig,
+        isFirstTime: true,
+        message: 'Welcome! Please configure your LLM settings to get started.',
+      });
+      return;
+    }
+
     const configObj = config.toObject();
+
+    // Cache the encrypted version for security
+    await setRedisCache(cacheKey, JSON.stringify(configObj), CACHE_TTL.MEDIUM);
+
+    // Decrypt API key before sending response
     if (configObj.llm_api_key) {
       configObj.llm_api_key = decrypt(configObj.llm_api_key);
     }
-    res.status(200).json({ data: configObj });
+
+    res.status(200).json({ data: configObj, isFirstTime: false });
   } catch (err) {
     res.status(400).json({ error: 'Failed to retrieve configuration', details: err });
   }
@@ -317,6 +416,7 @@ export const generateAnalysisReportUsingSystemPrompt = async (
  * Generate AI analysis report for a pull request
  * /playground/generate-analysis - PRIVATE
  * This function generates an AI-powered analysis report using the user's configured LLM model and system prompt.
+ * For first-time users, it provides guidance on setting up the playground.
  * @param req - Request object containing PR data and analysis parameters
  * @param res - Response object to send the analysis report
  * @returns { analysis: AnalysisReport }
@@ -339,8 +439,28 @@ export const generateAdvAnalysisReport = async (req: Request, res: Response): Pr
     const config = await Playground.findOne({ user: req.user.id });
 
     if (!config) {
-      res.status(404).json({
-        error: 'Playground configuration not found. Please configure your LLM model first.',
+      res.status(400).json({
+        error: 'Playground not configured',
+        message:
+          'Please configure your LLM model in the playground first to generate analysis reports.',
+        action: 'configure_playground',
+        isFirstTime: true,
+      });
+      return;
+    }
+
+    // Check if all required fields are configured
+    if (!config.llm_provider || !config.llm_model || !config.llm_api_key) {
+      res.status(400).json({
+        error: 'Incomplete playground configuration',
+        message:
+          'Please complete your LLM configuration (provider, model, and API key) in the playground.',
+        action: 'complete_configuration',
+        missingFields: {
+          provider: !config.llm_provider,
+          model: !config.llm_model,
+          apiKey: !config.llm_api_key,
+        },
       });
       return;
     }
@@ -348,7 +468,10 @@ export const generateAdvAnalysisReport = async (req: Request, res: Response): Pr
     // Check if connection is valid
     if (!config.isConnectionValid) {
       res.status(400).json({
-        error: 'LLM connection is not valid. Please test your connection in the playground first.',
+        error: 'LLM connection not validated',
+        message:
+          'Please test your LLM connection in the playground first to ensure it works correctly.',
+        action: 'test_connection',
       });
       return;
     }
@@ -705,13 +828,27 @@ const estimateReviewTime = (prData: any): string => {
  */
 export const getTemplateVariables = async (req: Request, res: Response): Promise<void> => {
   try {
+    const cacheKey = 'template_variables';
+
+    // Check cache first - this is static data that rarely changes
+    const cachedVariables = await getRedisCache(cacheKey);
+    if (cachedVariables) {
+      res.status(200).json(JSON.parse(cachedVariables));
+      return;
+    }
+
     const variables = Object.values(AVAILABLE_TEMPLATE_VARIABLES);
-    res.status(200).json({
+    const result = {
       success: true,
       variables,
       usage:
         'Use {{variable_key}} in your system prompt to include PR data. Example: {{title}} will be replaced with the actual PR title.',
-    });
+    };
+
+    // Cache for 24 hours - this is static data
+    await setRedisCache(cacheKey, JSON.stringify(result), CACHE_TTL.VERY_LONG);
+
+    res.status(200).json(result);
   } catch (err) {
     res.status(500).json({ error: 'Failed to retrieve template variables', details: err });
   }
@@ -735,7 +872,7 @@ const parseUserPromptTemplate = (systemPrompt: string, prData: any): string => {
       value = value
         .map(
           (file: any) =>
-            `- ${file.filename} (${file.status}, +${file.additions}, -${file.deletions})\n${file.patch || ''}`
+            `- ${file.filename} (${file.status}, +${file.additions}, -${file.deletions})\n${file.patch || ''}`,
         )
         .join('\n');
 
@@ -753,12 +890,11 @@ const parseUserPromptTemplate = (systemPrompt: string, prData: any): string => {
 
     parsedPrompt = parsedPrompt.replace(
       variablePattern,
-      value !== undefined && value !== null ? String(value) : 'N/A'
+      value !== undefined && value !== null ? String(value) : 'N/A',
     );
   });
   return parsedPrompt;
 };
-
 
 /**
  * Get nested object value using dot notation path
@@ -827,6 +963,7 @@ const validateSystemPromptTemplate = (systemPrompt: string): TemplateValidation 
  * Generate templated analysis report using user-defined system prompt with template variables
  * /playground/generate-templated-analysis - PRIVATE
  * This function generates an AI-powered analysis report using a templated system prompt.
+ * For first-time users, it provides guidance on setting up the playground.
  * @param req - Request object containing PR data, system prompt template, and LLM config
  * @param res - Response object to send the analysis report
  * @returns { analysis: string, templateInfo: object }
@@ -841,14 +978,42 @@ export const generateTemplatedAnalysisReport = async (
     const { prData, validateOnly = false } = req.body;
 
     const playgroundConfig = await Playground.findOne({ user: userId });
+
     if (!playgroundConfig) {
-      res.status(404).json({
-        error: 'Playground configuration not found. Please configure your LLM model first.',
+      res.status(400).json({
+        error: 'Playground not configured',
+        message:
+          'Please configure your LLM model in the playground first to generate analysis reports.',
+        action: 'configure_playground',
+        isFirstTime: true,
       });
       return;
     }
-    const { llm_provider, llm_model, llm_api_key, user_prompt } = playgroundConfig;
+
+    // Check if all required fields are configured
+    if (
+      !playgroundConfig.llm_provider ||
+      !playgroundConfig.llm_model ||
+      !playgroundConfig.llm_api_key
+    ) {
+      res.status(400).json({
+        error: 'Incomplete playground configuration',
+        message:
+          'Please complete your LLM configuration (provider, model, and API key) in the playground.',
+        action: 'complete_configuration',
+        missingFields: {
+          provider: !playgroundConfig.llm_provider,
+          model: !playgroundConfig.llm_model,
+          apiKey: !playgroundConfig.llm_api_key,
+        },
+      });
+      return;
+    }
+
+    const { llm_provider, llm_model, llm_api_key, user_prompt, max_tokens, temperature } =
+      playgroundConfig;
     const systemPromptTemplate = playgroundConfig.system_prompt;
+
     // Validate required fields
     if (!prData) {
       res.status(400).json({ error: 'PR data is required for analysis' });
@@ -856,7 +1021,11 @@ export const generateTemplatedAnalysisReport = async (
     }
 
     if (!systemPromptTemplate) {
-      res.status(400).json({ error: 'System prompt template is required' });
+      res.status(400).json({
+        error: 'System prompt template is required',
+        message: 'Please configure your system prompt in the playground first.',
+        action: 'configure_prompts',
+      });
       return;
     }
 
@@ -886,6 +1055,17 @@ export const generateTemplatedAnalysisReport = async (
       return;
     }
 
+    // Check if connection is valid before proceeding with analysis
+    if (!playgroundConfig.isConnectionValid) {
+      res.status(400).json({
+        error: 'LLM connection not validated',
+        message:
+          'Please test your LLM connection in the playground first to ensure it works correctly.',
+        action: 'test_connection',
+      });
+      return;
+    }
+
     // Parse the system prompt template with actual PR data
     const parsedUserPrompt = parseUserPromptTemplate(user_prompt, prData);
 
@@ -900,7 +1080,7 @@ export const generateTemplatedAnalysisReport = async (
     } else {
       // Use saved configuration
       const config = await Playground.findOne({ user: userId });
-      if (!config) {
+      if (!config || !config.llm_provider || !config.llm_model || !config.llm_api_key) {
         res.status(404).json({
           error:
             'No LLM configuration found. Please provide LLM config or configure in playground.',
@@ -936,6 +1116,10 @@ export const generateTemplatedAnalysisReport = async (
       metadata: {
         model: llmConfig.llm_model,
         provider: llmConfig.llm_provider,
+        systemPrompt: systemPromptTemplate,
+        userPrompt: user_prompt,
+        max_tokens,
+        temperature,
         timestamp: new Date().toISOString(),
         templateBased: true,
       },
@@ -966,6 +1150,16 @@ export const previewSystemPromptTemplate = async (req: Request, res: Response): 
       return;
     }
 
+    // Create cache key based on template content
+    const cacheKey = `template_preview:${Buffer.from(systemPromptTemplate).toString('base64')}`;
+
+    // Check cache first
+    const cachedPreview = await getRedisCache(cacheKey);
+    if (cachedPreview) {
+      res.status(200).json(JSON.parse(cachedPreview));
+      return;
+    }
+
     // Sample PR data for preview
     const samplePrData = {
       title: 'Fix authentication bug in user login system',
@@ -991,13 +1185,18 @@ export const previewSystemPromptTemplate = async (req: Request, res: Response): 
     // Parse with sample data
     const preview = parseUserPromptTemplate(systemPromptTemplate, samplePrData);
 
-    res.status(200).json({
+    const result = {
       success: true,
       preview,
       validation,
       sampleData: samplePrData,
       availableVariables: Object.values(AVAILABLE_TEMPLATE_VARIABLES),
-    });
+    };
+
+    // Cache for 24 hours - template previews with same input don't change
+    await setRedisCache(cacheKey, JSON.stringify(result), CACHE_TTL.VERY_LONG);
+
+    res.status(200).json(result);
   } catch (err: any) {
     logError('Template preview error:', err);
     res.status(500).json({

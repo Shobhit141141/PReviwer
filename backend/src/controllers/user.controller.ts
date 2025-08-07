@@ -1,7 +1,14 @@
 import { Octokit } from '@octokit/rest';
 import { Request, Response } from 'express';
 import User from '../models/user.model.js';
-import redis, { connectToRedis } from '../config/redis.js';
+import {
+  getRedisCache,
+  setRedisCache,
+  deleteRedisCache,
+  clearRedisCachePattern,
+  CACHE_TTL,
+  connectToRedis,
+} from '../config/redis.js';
 import { logError, logger } from '../utils/logger.js';
 
 export const getUser = async (req: Request, res: Response) => {
@@ -16,7 +23,7 @@ export const getUser = async (req: Request, res: Response) => {
 
     try {
       // Try to get user data from cache
-      const cachedUser = await redis.get(cacheKey);
+      const cachedUser = await getRedisCache(cacheKey);
       if (cachedUser) {
         logger(' CACHE ', `User data served from cache for ID: ${userId}`, 'green');
         res.json(JSON.parse(cachedUser));
@@ -37,8 +44,8 @@ export const getUser = async (req: Request, res: Response) => {
     }
 
     try {
-      // Cache the user data for 10 minutes (600 seconds)
-      await redis.setEx(cacheKey, 600, JSON.stringify(user));
+      // Cache the user data for 10 minutes
+      await setRedisCache(cacheKey, JSON.stringify(user), CACHE_TTL.SHORT * 2);
       logger(' CACHE ', `User data cached for ID: ${userId}`, 'blue');
     } catch (cacheError) {
       logError(
@@ -73,7 +80,7 @@ export const getGithubAnalytics = async (req: Request, res: Response) => {
 
   try {
     // Try to get analytics data from cache
-    const cachedAnalytics = await redis.get(cacheKey);
+    const cachedAnalytics = await getRedisCache(cacheKey);
     if (cachedAnalytics) {
       logger(' CACHE ', `GitHub analytics served from cache for user: ${username}`, 'green');
       res.status(200).json(JSON.parse(cachedAnalytics));
@@ -103,8 +110,8 @@ export const getGithubAnalytics = async (req: Request, res: Response) => {
     };
 
     try {
-      // Cache the analytics data for 15 minutes (900 seconds)
-      await redis.setEx(cacheKey, 900, JSON.stringify(analyticsData));
+      // Cache the analytics data for 15 minutes
+      await setRedisCache(cacheKey, JSON.stringify(analyticsData), CACHE_TTL.MEDIUM);
       logger(' CACHE ', `GitHub analytics cached for user: ${username}`, 'blue');
     } catch (cacheError) {
       logError(
@@ -134,10 +141,15 @@ export const clearUserCache = async (userId?: string, username?: string) => {
 
     if (username) {
       keysToDelete.push(`github_analytics:${username}`);
+      // Clear other user-related caches
+      keysToDelete.push(`active_prs:${username}`);
+      keysToDelete.push(`weekly_activity:${username}`);
+      keysToDelete.push(`repo_stats:${username}`);
+      keysToDelete.push(`recent_activity:${username}`);
     }
 
     if (keysToDelete.length > 0) {
-      await redis.del(keysToDelete);
+      await Promise.all(keysToDelete.map((key) => deleteRedisCache(key)));
       logger(' CACHE ', `Cleared cache for keys: ${keysToDelete.join(', ')}`, 'yellow');
     }
   } catch (error) {

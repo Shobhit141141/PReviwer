@@ -9,12 +9,10 @@ const playgroundSchema = new mongoose.Schema({
   },
   user_prompt : {
     type: String,
-    required: true,
     default: 'Please analyze this pull request based on the context provided in the system prompt.',
   },
   system_prompt: {
     type: String,
-    required: true,
     default: 'You are a helpful assistant.',
   },
   secondary_system_prompt: {
@@ -24,7 +22,6 @@ const playgroundSchema = new mongoose.Schema({
   },
   llm_model: {
     type: String,
-    required: true,
     validate: {
       validator: function (value: string): boolean {
         const provider = (this as any).llm_provider as keyof typeof MODELS_FOR_EVERY_PROVIDER;
@@ -36,23 +33,19 @@ const playgroundSchema = new mongoose.Schema({
   },
   llm_provider: {
     type: String,
-    required: true,
     enum: ['openai', 'anthropic', 'google'],
   },
   llm_api_key: {
     type: String,
-    required: true,
   },
   temperature: {
     type: Number,
-    required: true,
     min: 0,
     max: 2,
     default: 0.7,
   },
   max_tokens: {
     type: Number,
-    required: true,
     default: 1000,
   },
   isConnectionValid : {
