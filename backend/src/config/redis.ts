@@ -1,6 +1,6 @@
 import { createClient } from 'redis';
-import { logError, logger } from '../utils/logger';
-import { CONSTANTS } from './constants';
+import { logError, logger } from '../utils/logger.js';
+import { CONSTANTS } from './constants.js';
 
 const redis = createClient({
   url: process.env.NODE_ENV === 'prod' ? CONSTANTS.REDIS_URI : 'redis://localhost:6379',
