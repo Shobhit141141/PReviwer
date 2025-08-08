@@ -14,7 +14,7 @@ import LandingPage from './landing/page';
 const Dashboard = () => {
   const { isAuthenticated } = useAuth();
   return (
-    <div className="min-h-screen text-white relative bg-gray-900">
+    <div className="min-h-screen text-white relative bg-gray-900 pt-20">
 
       <div className="fixed pointer-events-none top-[10%] left-[5%] w-[400px] h-[400px] bg-purple-500 rounded-full blur-[160px] opacity-50"></div>
       <div className="fixed pointer-events-none top-[20%] right-[5%] w-[300px] h-[300px] bg-pink-500 rounded-full blur-[140px] opacity-35"></div>

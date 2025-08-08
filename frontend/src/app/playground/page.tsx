@@ -277,7 +277,7 @@ export default function PlaygroundPage() {
   const [, setActivePromptField] = useState<"system" | "secondary" | "user" | null>(null);
 
   return (
-    <div className="max-w-6xl mx-auto py-6 pt-4 px-4 space-y-8">
+    <div className="max-w-6xl mx-auto py-6 space-y-8 pt-20">
       <div className="fixed pointer-events-none top-[10%] left-[5%] w-[400px] h-[400px] bg-purple-500 rounded-full blur-[160px] opacity-50"></div>
       <div className="fixed pointer-events-none top-[20%] right-[5%] w-[300px] h-[300px] bg-pink-500 rounded-full blur-[140px] opacity-35"></div>
       <div className="fixed pointer-events-none bottom-[15%] left-[20%] w-[350px] h-[350px] bg-blue-500 rounded-full blur-[150px] opacity-30"></div>

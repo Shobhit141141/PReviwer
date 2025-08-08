@@ -1056,15 +1056,15 @@ export const generateTemplatedAnalysisReport = async (
     }
 
     // Check if connection is valid before proceeding with analysis
-    if (!playgroundConfig.isConnectionValid) {
-      res.status(400).json({
-        error: 'LLM connection not validated',
-        message:
-          'Please test your LLM connection in the playground first to ensure it works correctly.',
-        action: 'test_connection',
-      });
-      return;
-    }
+    // if (!playgroundConfig.isConnectionValid) {
+    //   res.status(400).json({
+    //     error: 'LLM connection not validated',
+    //     message:
+    //       'Please test your LLM connection in the playground first to ensure it works correctly.',
+    //     action: 'test_connection',
+    //   });
+    //   return;
+    // }
 
     // Parse the system prompt template with actual PR data
     const parsedUserPrompt = parseUserPromptTemplate(user_prompt, prData);
