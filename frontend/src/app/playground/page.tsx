@@ -15,6 +15,7 @@ import { AlertTriangle, BadgeCheck, BadgeInfo, ChevronDown, CircleCheck, CircleX
 import { MODELS, PROVIDERS } from "@/config/enums";
 import ReactMarkdown from "react-markdown";
 import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 const PR_VARIABLES = [
   { key: "title", label: "Title" },
@@ -40,7 +41,7 @@ export default function PlaygroundPage() {
   const [system_prompt, setSystemPrompt] = useState("");
   const [user_prompt, setUserPrompt] = useState("Please analyze this pull request based on the context provided in the system prompt. You can use the {{variables}} to access the pull request data. For example, you can use {{title}} to get the title of the pull request.");
   const [secondary_system_prompt, setSecondarySystemPrompt] = useState("");
-  const [loading, ] = useState(false);
+  const [loading,] = useState(false);
   const [testResult, setTestResult] = useState<{ message: string, success: boolean } | null>(null);
   const [abResult, setAbResult] = useState<{ input: string; primary: string; secondary: string } | null>(null);
   const [promptResults, setPromptResults] = useState<{ type: string; prompt: string; response: string }[]>([]);
@@ -48,6 +49,7 @@ export default function PlaygroundPage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestionPos, setSuggestionPos] = useState({ top: 0, left: 0 });
 
+  const router = useRouter();
   const [fetching, setFetching] = useState({
     systemPrompt: false,
     abTest: false,
@@ -194,7 +196,6 @@ export default function PlaygroundPage() {
   const handleAbTest = async () => {
     setFetching(prev => ({ ...prev, abTest: true }));
     setError(null);
-    // Clear previous results when starting A/B test
     setTestResult(null);
     setPromptResults([]);
     try {
@@ -283,6 +284,15 @@ export default function PlaygroundPage() {
       <div className="fixed pointer-events-none bottom-[15%] left-[20%] w-[350px] h-[350px] bg-blue-500 rounded-full blur-[150px] opacity-30"></div>
       <div className="fixed pointer-events-none bottom-[10%] right-[15%] w-[400px] h-[400px] bg-fuchsia-500 rounded-full blur-[180px] opacity-35"></div>
       <div className="fixed pointer-events-none top-[40%] left-[40%] w-[300px] h-[300px] bg-indigo-500 rounded-full blur-[120px] opacity-25"></div>
+
+
+      <Button
+        variant="outline"
+        onClick={() => router.back()}
+        className="border-gray-700 hover:bg-gray-800"
+      >
+        ← Back
+      </Button>
       <Card>
 
         <CardHeader className="flex items-center gap-4">
@@ -541,7 +551,7 @@ export default function PlaygroundPage() {
                   onClick={handleTestConnection}
                   disabled={loading || fetching.testConnection}
                 >
-                  {fetching.testConnection && <Loader className="animate-spin" /> } Test Connection
+                  {fetching.testConnection && <Loader className="animate-spin" />} Test Connection
                 </Button>
                 <Button
                   type="button"

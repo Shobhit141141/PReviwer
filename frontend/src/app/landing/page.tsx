@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import {  CardContent } from "@/components/ui/card";
+import { CardContent } from "@/components/ui/card";
 import {
   Zap,
   Shield,
   TrendingUp,
   Code,
   Users,
-  
   ArrowRight,
   Github,
   Twitter,
@@ -21,14 +20,25 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 import WorkflowSection from "@/components/workflow";
-
+import Lenis from "lenis";
+import { motion, useScroll, useTransform } from "framer-motion"
 export default function LandingPage() {
-  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    setIsVisible(true);
+    const lenis = new Lenis({
+      duration: 0.6,
+    });
+
+    function raf(time: number) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+    requestAnimationFrame(raf);
+
+    return () => lenis.destroy();
   }, []);
 
+  const { scrollY } = useScroll();
   const features = [
     {
       icon: <Bot className="h-8 w-8 text-blue-400" />,
@@ -67,7 +77,8 @@ export default function LandingPage() {
       color: "cyan"
     }
   ];
-
+  const heroScale = useTransform(scrollY, [0, 400], [1, 1.4]); // 1.15 - max scale
+  const heroTranslateY = useTransform(scrollY, [0, 400], [0, 100]); // 80 - max translate
   return (
     <div className="min-h-screen text-white overflow-hidden w-full ">
       {/* Background Effects */}
@@ -113,24 +124,32 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="relative z-10 px-6 py-10 pt-20">
         <div className="max-w-7xl mx-auto text-center">
-          <div className={`transform transition-all duration-1000 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+          <div className={`transform transition-all duration-1000 `}>
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 mb-8">
               <Sparkles className="h-4 w-4 text-blue-400 mr-2" />
-              <span className="text-sm text-blue-400">Powered by Advanced AI</span>
+              <span className="text-sm text-blue-400">Powered by LLMs</span>
             </div>
 
-            <h1 className="text-5xl md:text-8xl font-bold mb-6 bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent leading-tight">
+            <motion.h1 className="text-5xl md:text-8xl font-bold mb-6 bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent leading-tight"
+              animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
+              initial={{ y: 40, opacity: 0, filter: "blur(10px)" }}
+              transition={{ duration: 0.5 }}
+            >
               Revolutionize Your
               <br />
               <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                 Code Reviews
               </span>
-            </h1>
+            </motion.h1>
 
-            <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed">
+            <motion.p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed"
+              animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
+              initial={{ y: 40, opacity: 0, filter: "blur(10px)" }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
               Harness the power of AI to analyze your pull requests, identify issues, and get actionable insights
               that elevate your code quality to the next level.
-            </p>
+            </motion.p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
               <Link href="/playground">
@@ -146,42 +165,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Demo Preview */}
-          {/* <div className={`transform transition-all duration-1000 delay-500 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
-            <Card className="bg-gray-900/50 border-gray-700/50 backdrop-blur-sm max-w-4xl mx-auto">
-              <CardContent className="p-8">
-                <div className="bg-gray-800/50 rounded-lg p-6 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                      <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    </div>
-                    <span className="text-sm text-gray-400">PReviwer Analysis Dashboard</span>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                    <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-4 text-center">
-                      <CheckCircle className="h-8 w-8 text-green-400 mx-auto mb-2" />
-                      <div className="text-lg font-semibold text-green-400">9.2/10</div>
-                      <div className="text-sm text-gray-300">Code Quality</div>
-                    </div>
-                    <div className="bg-blue-500/20 border border-blue-500/30 rounded-lg p-4 text-center">
-                      <Shield className="h-8 w-8 text-blue-400 mx-auto mb-2" />
-                      <div className="text-lg font-semibold text-blue-400">Secure</div>
-                      <div className="text-sm text-gray-300">Security Score</div>
-                    </div>
-                    <div className="bg-purple-500/20 border border-purple-500/30 rounded-lg p-4 text-center">
-                      <TrendingUp className="h-8 w-8 text-purple-400 mx-auto mb-2" />
-                      <div className="text-lg font-semibold text-purple-400">+15%</div>
-                      <div className="text-sm text-gray-300">Performance</div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div> */}
-
-          <div className={`transform transition-all duration-1000 delay-500 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'} hover:scale-[1.02] transition-all duration-500 cursor-pointer`}>
+          <motion.div style={{ scale: heroScale, y: heroTranslateY }} className="mb-10">
             <Image
               src="/dashboard.png"
               alt="Demo Preview"
@@ -189,7 +173,7 @@ export default function LandingPage() {
               height={450}
               className="rounded-lg shadow-lg mx-auto mt-12"
             />
-          </div>
+          </motion.div>
 
           {/* Scroll indicator */}
           <div className="mt-16 animate-bounce">
@@ -199,7 +183,7 @@ export default function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="relative z-10 px-6 py-20">
+      <section id="features" className="relative z-10 px-6 py-20 mt-20">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
@@ -212,9 +196,15 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <div
+              <motion.div
                 key={index}
-                className="relative bg-black/35 transition-all duration-500 transform rounded-lg hover:scale-[1.01] hover:shadow-xl group overflow-hidden cursor-pointer"
+                className="relative bg-black/35 rounded-lg group overflow-hidden cursor-pointer"
+
+                initial={{ y: 40, filter: "blur(10px)", opacity: 0 }}
+                whileInView={{ y: 0, filter: "blur(0px)", opacity: 1 }}
+                exit={{ y: 20, filter: "blur(5px)", opacity: 0 }}
+                transition={{ duration: 0.3, delay: 0.2 * index }}
+
               >
                 {/* Gradient overlay on hover */}
                 <div
@@ -234,7 +224,7 @@ export default function LandingPage() {
                   <h3 className="text-xl font-semibold mb-3 text-white">{feature.title}</h3>
                   <p className="text-gray-400 leading-relaxed">{feature.description}</p>
                 </CardContent>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -245,22 +235,32 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="relative z-10 px-6 py-12 border-t border-black/20 bg-black/35 backdrop-blur-sm rounded-t-4xl">
-        <div className="max-w-7xl mx-auto">
-          <Image
+        <Image
 
-            src="/git.png"
-            alt="PReviwer Logo"
-            width={100}
-            height={30}
-            className="mx-auto mb-6"
-          />
+          src="/git.png"
+          alt="PReviwer Logo"
+          width={100}
+          height={30}
+          className="mx-auto mb-6"
+        />
+        <div className="max-w-7xl mx-auto">
 
           <div className="text-center mb-6">
-            <div className="flex items-center justify-center space-x-2">
+            <motion.div className="flex items-center justify-center space-x-2"
+              initial={{ y: 40, filter: "blur(10px)", opacity: 0 }}
+              whileInView={{ y: 0, filter: "blur(0px)", opacity: 1 }}
+              exit={{ y: 20, filter: "blur(5px)", opacity: 0 }}
+              transition={{ duration: 0.3, delay: 0.2 }}
+            >
               <h2 className="text-3xl font-bold text-white mb-2">Previwer</h2>
               <span className="bg-black/30 px-3 py-1 rounded-full text-sm">v1.5</span>
-            </div>
-            <p className="text-xl text-white mb-2 relative inline-block">
+            </motion.div>
+            <motion.p className="text-xl text-white mb-2 relative inline-block"
+              initial={{ y: 40, filter: "blur(10px)", opacity: 0 }}
+              whileInView={{ y: 0, filter: "blur(0px)", opacity: 1 }}
+              exit={{ y: 20, filter: "blur(5px)", opacity: 0 }}
+              transition={{ duration: 0.3, delay: 0.2 }}
+            >
               <span className="bg-gradient-to-r from-yellow-300 via-orange-600 to-yellow-300 bg-clip-text text-transparent animate-shine">
                 Analyze your github like never before with PReviwer
               </span>
@@ -278,22 +278,43 @@ export default function LandingPage() {
                   }
                 }
               `}</style>
-            </p>
+            </motion.p>
           </div>
-          <p className="text-gray-200 text-center mb-1">Follow us on social media for updates and discussions.</p>
+          <motion.p className="text-gray-200 text-center mb-1"
+            initial={{ opacity: 0, filter: "blur(10px)" }}
+            whileInView={{ opacity: 1, filter: "blur(0px)" }}
+            exit={{ opacity: 0, filter: "blur(5px)" }}
+            transition={{ duration: 0.3, delay: 0.2 }}
+          >Follow us on social media for updates and discussions.</motion.p>
           <div className="flex justify-center space-x-6 mb-8">
-            <Button variant="outline" size="lg" className="border-gray-600 text-gray-300 hover:bg-gray-800 flex items-center">
-              <Github className="h-5 w-5" />
-              <p className="ml-2 hidden sm:block">GitHub</p>
-            </Button>
-            <Button variant="outline" size="lg" className="border-gray-600 text-gray-300 hover:bg-gray-800 flex items-center">
-              <Twitter className="h-5 w-5" />
-              <p className="ml-2 hidden sm:block">Twitter</p>
-            </Button>
-            <Button variant="outline" size="lg" className="border-gray-600 text-gray-300 hover:bg-gray-800 flex items-center">
-              <Linkedin className="h-5 w-5" />
-              <p className="ml-2 hidden sm:block">LinkedIn</p>
-            </Button>
+
+            {[
+              {
+                title: "GitHub",
+                icon: <Github className="h-5 w-5" />,
+              },
+              {
+                title: "Twitter",
+                icon: <Twitter className="h-5 w-5" />,
+              },
+              {
+                title: "LinkedIn",
+                icon: <Linkedin className="h-5 w-5" />,
+              },
+            ].map((link, index) => (
+              <motion.div key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                transition={{ duration: 0.3, delay: 0.2 * index }}
+              >
+                <Button variant="outline" size="lg" className="border-gray-600 text-gray-300 hover:bg-gray-800 flex items-center">
+                  {link.icon}
+                  <p className="ml-2 hidden sm:block">{link.title}</p>
+                </Button>
+              </motion.div>
+            ))}
+
           </div>
 
         </div>

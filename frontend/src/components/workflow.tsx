@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { CardContent } from "@/components/ui/card";
+import { motion } from "framer-motion";
 
 type WorkflowStepProps = {
   step: number;
@@ -11,6 +12,7 @@ type WorkflowStepProps = {
   offsetY?: string;
   footerNote?: string;
   desc?: string;
+  index?: number;
 };
 
 function WorkflowStep({
@@ -23,9 +25,15 @@ function WorkflowStep({
   offsetY = "",
   footerNote,
   desc = "",
+  index
 }: WorkflowStepProps) {
   return (
-    <div className={`relative group ${offsetY}`}>
+    <motion.div className={`relative group ${offsetY}`}
+      initial={{ opacity: 0, x: 40 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.5 , delay: 0.2 * (index || 0), ease: "easeInOut" }}
+      viewport={{ once: false }}
+    >
       {/* Step Number Badge */}
       <div
         className={`absolute -top-4 -left-4 w-12 h-12 ${badgeGradient} rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg z-20`}
@@ -59,7 +67,7 @@ function WorkflowStep({
           </div>
         </CardContent>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -133,7 +141,7 @@ export default function WorkflowSection() {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative z-10">
             {steps.map((s, i) => (
-              <WorkflowStep key={i} {...s} />
+              <WorkflowStep key={i} {...s} index={i} />
             ))}
           </div>
         </div>
