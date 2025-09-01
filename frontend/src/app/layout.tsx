@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { Ubuntu} from "next/font/google";
+import { Ubuntu } from "next/font/google";
 
 import "./globals.css";
 import { ThemeProvider } from "@/components/ui/theme-povider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Navbar from "@/components/navbar";
 import { Toaster } from "react-hot-toast";
+import Script from "next/script";
 
 
 const getUbuntu = Ubuntu({
@@ -27,8 +28,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=G-XXXXXXX`}
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-XXXXXXX');
+          `}
+        </Script>
+      </head>
       <body
-       className={`${getUbuntu.className} antialiased`}
+        className={`${getUbuntu.className} antialiased`}
       >
         <ThemeProvider
           attribute="class"
@@ -36,8 +51,8 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          
-          <Toaster /> 
+
+          <Toaster />
           <AuthProvider>
             <Navbar />
             {children}
