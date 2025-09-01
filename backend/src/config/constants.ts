@@ -20,6 +20,7 @@ export const CONSTANTS = {
   GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID || 'your_github_client_id',
   GITHUB_CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET || 'your_github_client_secret',
   REDIRECT_URI: process.env.REDIRECT_URI || 'http://localhost:5000/api/github/callback',
+  GITHUB_APP_NAME: process.env.GITHUB_APP_NAME || 'previewer-dev',
 
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:3000',
   BACKEND_URL: process.env.BACKEND_URL || 'http://localhost:5000',

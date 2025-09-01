@@ -3,7 +3,7 @@ import { Request, Response } from 'express';
 import User from '../models/user.model.js';
 import { decrypt, encrypt } from '../utils/encrypt_decrypt.js';
 import { CONSTANTS } from '../config/constants.js';
-import { logError } from '../utils/logger.js';
+import { logError, logInfo } from '../utils/logger.js';
 import { getRedisCache, setRedisCache, CACHE_TTL } from '../config/redis.js';
 import Playground from '../models/playground.model.js';
 
@@ -11,7 +11,7 @@ const CLIENT_ID = CONSTANTS.GITHUB_CLIENT_ID;
 const CLIENT_SECRET = CONSTANTS.GITHUB_CLIENT_SECRET;
 const REDIRECT_URI = CONSTANTS.REDIRECT_URI;
 const FRONTEND_URL = CONSTANTS.FRONTEND_URL;
-
+const GITHUB_APP_NAME = CONSTANTS.GITHUB_APP_NAME;
 /** * GitHub OAuth login handler
  * /github/login - PUBLIC
  * This function redirects the user to GitHub's OAuth login page.
@@ -20,11 +20,12 @@ const FRONTEND_URL = CONSTANTS.FRONTEND_URL;
  * @return { void } - Redirects to GitHub OAuth login page
  */
 export const githubLogin = (_req: Request, res: Response) => {
+  const scopes = ['read:user', 'user:email', 'repo'].join(' ');
   const githubAppAuthUrl =
     `https://github.com/login/oauth/authorize` +
     `?client_id=${CLIENT_ID}` +
-    `&redirect_uri=${REDIRECT_URI}` +
-    `&scope=read:user%20user:email` +
+    `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
+    `&scope=${encodeURIComponent(scopes)}` +
     `&prompt=consent`;
 
   res.redirect(githubAppAuthUrl);
@@ -95,9 +96,8 @@ export const githubCallback = async (req: Request, res: Response) => {
     }
 
 
-    // Also cache the user data in Redis
     try {
-      await setRedisCache(`user:${user?._id}`, JSON.stringify(user), CACHE_TTL.LONG);  
+      await setRedisCache(`user:${user?._id}`, JSON.stringify(user), CACHE_TTL.LONG);
     } catch (cacheError) {
       logError(
         'Error caching user data after GitHub login',
@@ -105,15 +105,14 @@ export const githubCallback = async (req: Request, res: Response) => {
       );
     }
 
-    // save a default playgroundConfig for first time users to avoid errors
     if (isFirstTime && user?._id) {
-  
 
+      logInfo(`Creating default playground for new user ${user.username} and ${user._id}`);
       const defaultPlaygroundConfig = {
-        userId: user._id,
+        user: user._id,
         system_prompt: 'You are a helpful assistant.',
         secondary_system_prompt: '',
-        llm_model: 'gpt-3.5-turbo',
+        llm_model: 'gpt-4o-mini',
         llm_provider: 'openai',
         llm_api_key: '',
         temperature: 0.7,
@@ -122,6 +121,11 @@ export const githubCallback = async (req: Request, res: Response) => {
       };
 
       await Playground.create(defaultPlaygroundConfig);
+    }
+
+    if (isFirstTime) {
+      const installationUrl = `https://github.com/apps/${GITHUB_APP_NAME}/installations/new`;
+      return res.redirect(installationUrl);
     }
 
     const userDataEncoded = encodeURIComponent(JSON.stringify(user));
@@ -287,5 +291,17 @@ export const getPRDetailsController = async (req: Request, res: Response) => {
   } catch (error: any) {
     logError('Error in PR details controller:', error);
     res.status(500).json({ error: 'Failed to fetch PR details', details: error.message });
+  }
+};
+
+
+export const commentOnPRController = async (req: Request, res: Response) => {
+  try {
+    // Import the service function dynamically to avoid circular imports
+    const { createComment } = await import('../services/github.service.js');
+    await createComment(req, res);
+  } catch (error: any) {
+    logError('Error in comment on PR controller:', error);
+    res.status(500).json({ error: 'Failed to comment on PR', details: error.message });
   }
 };

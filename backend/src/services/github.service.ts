@@ -22,10 +22,6 @@ export const getActivePullRequests = async (req: Request, res: Response) => {
   const accessToken = req.accessToken;
   const username = req.user?.username;
 
-  if (!accessToken || !username) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-
   const cacheKey = `active_prs:${username}`;
 
   try {
@@ -660,5 +656,41 @@ export const getPRDetails = async (req: Request, res: Response) => {
   } catch (err: any) {
     // logError('Error fetching PR details:', err);
     res.status(500).json({ error: 'Failed to fetch PR details', details: err.message });
+  }
+};
+
+export const createComment = async (req: Request, res: Response) => {
+  try {
+
+    const {comment,owner,repo,prNumber} = req.body;
+    const { accessToken } = req;
+
+    if (!owner || !repo || !prNumber) {
+      return res.status(400).json({ error: "Repository owner, name, and PR number are required query parameters." });
+    }
+    if (!comment) {
+      return res.status(400).json({ error: "The request body must include a 'comment'." });
+    }
+    const issue_number = parseInt(prNumber, 10);
+    if (isNaN(issue_number)) {
+      return res.status(400).json({ error: "Invalid pull request number provided." });
+    }
+    const octokit = new Octokit({ auth: accessToken });
+    await octokit.request('POST /repos/{owner}/{repo}/issues/{issue_number}/comments', {
+      owner,
+      repo,
+      issue_number: issue_number,
+      body: comment,
+    });
+
+    return res.status(201).json({ success: true, message: "Comment added successfully." });
+
+  } catch (error: any) {
+    logError("Error creating general comment on PR:", error);
+
+    const status = error.status || 500;
+    const message = error.message || "Failed to post comment on PR.";
+
+    return res.status(status).json({ error: message });
   }
 };
