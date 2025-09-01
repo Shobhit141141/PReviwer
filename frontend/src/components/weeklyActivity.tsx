@@ -1,6 +1,7 @@
 import { githubApi } from "@/lib/api";
 import { useEffect, useState } from "react";
 import { Skeleton } from "./ui/skeleton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 type DaySummary = {
   day: string;
@@ -49,18 +50,52 @@ function WeeklyActivity() {
             <div key={day.date} className="text-center">
               <div className="text-xs text-gray-400 mb-2">{day.day}</div>
               <div className="space-y-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
                 <div
-                  className="bg-blue-500 rounded"
+                  className="bg-blue-500 rounded cursor-pointer"
                   style={{ height: `${day.commits * 10}px` }}
                 ></div>
+                </TooltipTrigger>
+                <TooltipContent>
+                {day.commits} Commits
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
                 <div
-                  className="bg-green-500 rounded"
+                  className="bg-green-500 rounded cursor-pointer"
                   style={{ height: `${day.prs * 10}px` }}
                 ></div>
+                </TooltipTrigger>
+                <TooltipContent>
+                {day.prs} PRs
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
                 <div
-                  className="bg-yellow-500 rounded"
+                  className="bg-yellow-500 rounded cursor-pointer"
                   style={{ height: `${day.repos * 10}px` }}
                 ></div>
+                </TooltipTrigger>
+                <TooltipContent>
+                {day.repos} Repos
+                </TooltipContent>
+              </Tooltip>
+              
+              <Tooltip>
+                <TooltipTrigger asChild>
+                <div
+                  className="bg-yellow-500 rounded cursor-pointer"
+                  style={{ height: `${day.repos * 10}px` }}
+                ></div>
+                </TooltipTrigger>
+                <TooltipContent>
+                {day.repos} Repos
+                </TooltipContent>
+              </Tooltip>
               </div>
             </div>
           ))}
