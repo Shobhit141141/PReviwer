@@ -7,12 +7,9 @@ const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   avatar: { type: String, default: 'https://www.gravatar.com/avatar/' },
   bio: { type: String, default: '' },
-  email: { 
-    type: String, 
-    required: false, 
-    unique: true, 
-    sparse: true,
-    default: undefined 
+  email: {
+    type: String,
+    required: false,
   },
   github_refresh_token: { type: String, required: false },
   createdAt: { type: Date, default: Date.now },
@@ -26,29 +23,27 @@ const userSchema = new mongoose.Schema({
 
 userSchema.pre('save', function (next) {
   const user = this;
-  
   if (user.isModified('github_refresh_token') && user.github_refresh_token) {
     user.github_refresh_token = encrypt(user.github_refresh_token);
   }
-    if (user.email === null || user.email === '') {
+  if (!user.email || user.email.trim() === '') {
     user.email = undefined;
   }
-    user.updatedAt = new Date();
-  
+
+  user.updatedAt = new Date();
+
   next();
 });
 
-userSchema.index({ email: 1 }, { 
-  unique: true, 
-  sparse: true,
-  partialFilterExpression: { 
-    $and: [
-      { email: { $exists: true } },
-      { email: { $ne: null } },
-      { email: { $ne: '' } }
-    ]
+userSchema.index(
+  { email: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      email: { $exists: true, $type: "string", $ne: "" }
+    }
   }
-});
+);
 
 const User = mongoose.model('User', userSchema);
 

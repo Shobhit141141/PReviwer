@@ -68,16 +68,24 @@ export const githubCallback = async (req: Request, res: Response) => {
       },
     });
 
-    const userData = {
+    const userData: {
+      name: any;
+      username: any;
+      avatar: any;
+      bio: any;
+      githubId: any;
+      github_refresh_token: string;
+      email?: string;
+    } = {
       name: userRes.data.name,
       username: userRes.data.login,
       avatar: userRes.data.avatar_url,
       bio: userRes.data.bio,
-      email: userRes.data.email,
       githubId: userRes.data.id.toString(),
       github_refresh_token: encrypt(refresh_token),
     };
 
+    let email;
     let user = await User.findOne({
       username: userRes.data.login,
       githubId: userRes.data.id.toString(),
@@ -85,6 +93,9 @@ export const githubCallback = async (req: Request, res: Response) => {
     let isFirstTime = false;
 
     if (!user) {
+      if (userRes.data.email && userRes.data.email.trim() !== '') {
+        userData.email = userRes.data.email.trim();
+      }
       user = await User.create(userData);
       isFirstTime = true;
     } else {
@@ -167,7 +178,7 @@ export const refreshAccessToken = async (req: Request, res: Response) => {
     const users = await User.find({ github_refresh_token: { $exists: true, $ne: null } });
     let user = null;
     for (const u of users) {
-      if (decrypt(u.github_refresh_token) === refreshToken) {
+      if (u.github_refresh_token && decrypt(u.github_refresh_token) === refreshToken) {
         user = u;
         break;
       }
