@@ -16,6 +16,7 @@ import { MODELS, PROVIDERS } from "@/config/enums";
 import ReactMarkdown from "react-markdown";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 const PR_VARIABLES = [
   { key: "title", label: "Title" },
@@ -312,6 +313,8 @@ export default function PlaygroundPage() {
                   onClick={() => setProviderOpen((prev) => !prev)}
                   className="text-white bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 focus:ring-2 focus:outline-none focus:ring-white/30 font-medium rounded-lg text-sm px-5 py-2.5 inline-flex items-center"
                 >
+                  <Image src={PROVIDERS.find(p => p.value === llm_provider)?.icon ?? "/fallback-icon.png"} alt="" className="w-5 h-5 mr-2" />
+
                   {PROVIDERS.find(p => p.value === llm_provider)?.label}
                   <ChevronDown className="ml-2 h-4 w-4" />
                 </button>
@@ -329,7 +332,7 @@ export default function PlaygroundPage() {
                             }}
                             className="flex items-center w-full text-left px-4 py-2 hover:bg-white/20 transition-all  duration-200"
                           >
-                            <img src={p.icon} alt="" className="w-5 h-5 mr-2" />
+                            <Image src={p.icon} alt="" className="w-5 h-5 mr-2" />
                             {p.label}
                           </button>
                         </li>
@@ -462,7 +465,7 @@ export default function PlaygroundPage() {
                     //   setShowSuggestions(false);
                     // }
                   }}
-                  placeholder="Main prompt for the model"
+                  placeholder="Secondary prompt for the model"
                   rows={4}
                 />
                 {/* {showSuggestions && (

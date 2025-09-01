@@ -441,6 +441,23 @@ export const githubApi = {
     );
     return handleResponse(response);
   },
+
+  commentOnPr: async (owner: string, repo: string, prNumber: string | number, comment: string) => {
+    const token = api.getAccessToken();
+    if (!token) throw new ApiError("No access token found", 401);
+    const response = await fetch(
+      `${API_BASE_URL}/api/github/comment-on-pr`,
+      {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ comment, owner, repo, prNumber }),
+      }
+    );
+    return handleResponse(response);
+  }
 };
 
 // PR Report API

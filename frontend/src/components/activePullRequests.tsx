@@ -1,11 +1,12 @@
 import { ActivePRType } from "@/types";
-import { AlertCircle, CheckCircle, Clock, Filter, GitCommit, GitPullRequest, Loader, MessageSquare, Minus, MoreHorizontal, Plus } from "lucide-react";
+import { AlertCircle, CheckCircle, Clock, Filter, GitCommit, GitPullRequest, MessageSquare, Minus, MoreHorizontal, Plus } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { githubApi } from "@/lib/api";
 import { useEffect, useState } from "react";
 import { Skeleton } from "./ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
+import Image from "next/image";
 
 interface StatusColorMap {
   [key: string]: string;
@@ -62,7 +63,7 @@ function ActivePullRequests() {
         {/* <PlaygroundCard /> */}
 
         <Skeleton className="h-64 w-full rounded-lg border border-gray-800 p-6 flex items-center justify-center">
-          <Loader className="animate-spin mr-2" />Crunching active pull requests...
+          {/* <Loader className="animate-spin mr-2" />Crunching active pull requests... */}
         </Skeleton>
       </div>
     )
@@ -151,7 +152,7 @@ function ActivePullRequests() {
                   <div className="flex items-center space-x-2">
                     <div className="flex -space-x-2">
                       {pr.creator?.avatar && (
-                        <img
+                        <Image
                           src={pr.creator.avatar}
                           alt={pr.creator.username}
                           className="w-10 h-10 rounded-full ml-2 border border-gray-700"

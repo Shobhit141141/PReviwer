@@ -4,13 +4,16 @@ import { Button } from "./ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loading } from "./ui/loading";
 import { Error } from "./ui/error";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 function Navbar() {
   const { user, isLoading, isAuthenticated, error, login, logout, clearError } = useAuth();
-  
 
+  const router = useRouter();
   const handleLogout = async () => {
     await logout();
+    router.push("/");
   };
 
   return (
@@ -19,7 +22,7 @@ function Navbar() {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <img src="/git.png" alt="" className="w-[40px]" />
+              <Image src="/git.png" alt="" className="w-[40px]" />
               <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent hidden sm:block font-mono">
                 PReviewer <span className="text-xs 
                 text-white 
@@ -28,14 +31,6 @@ function Navbar() {
                 ">v1.5</span>
               </h1>
             </div>
-            {/* <div className="hidden md:flex items-center space-x-2 bg-gray-800 rounded-lg px-3 py-2">
-              <Search className="w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search repositories, PRs..."
-                className="bg-transparent border-none outline-none text-sm w-64"
-              />
-            </div> */}
           </div>
           
           {/* Error Display */}
@@ -65,7 +60,7 @@ function Navbar() {
               <div className="flex items-center space-x-3">
                 {/* User Avatar and Info */}
                 <div className="flex items-center space-x-2">
-                  <img 
+                  <Image 
                     src={user.avatar} 
                     alt={user.name} 
                     className="w-10 h-10 rounded-full "

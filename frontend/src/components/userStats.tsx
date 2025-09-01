@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { Skeleton } from './ui/skeleton';
 import { formatDate } from '@/utils/formatDate';
 import { RefreshButton } from './RefreshButton';
+import Image from 'next/image';
 
 function UserStats() {
 
@@ -67,8 +68,8 @@ function UserStats() {
                 {/* Avatar + Info Card */}
                 <div className=" rounded-xl p-6 border border-gray-800 lg:col-span-2 lg:row-span-2 flex flex-col justify-between transition-colors" id='glassmorphism'>
                     <div className="flex items-center space-x-4">
-                        <img
-                            src={userStats?.avatar}
+                        <Image
+                            src={userStats?.avatar || "/default-avatar.png"}
                             alt="GitHub Avatar"
                             className="w-16 h-16 rounded-full border border-gray-700"
                         />

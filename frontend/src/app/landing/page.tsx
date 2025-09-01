@@ -2,21 +2,7 @@
 
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { CardContent } from "@/components/ui/card";
-import {
-  Zap,
-  Shield,
-  TrendingUp,
-  Code,
-  Users,
-  ArrowRight,
-  Github,
-  Twitter,
-  Linkedin,
-  Bot,
-  Sparkles,
-  ChevronDown
-} from "lucide-react";
+import { Zap, Shield, TrendingUp, Code, Users, ArrowRight, Github, Twitter, Linkedin, Bot, Sparkles, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import WorkflowSection from "@/components/workflow";
@@ -44,7 +30,7 @@ export default function LandingPage() {
       icon: <Bot className="h-8 w-8 text-blue-400" />,
       title: "AI-Powered Analysis",
       description: "Advanced AI analyzes PRs for code quality, security, and performan.",
-      color: "bg-blue-400"
+      color: "blue"
     },
     {
       icon: <Zap className="h-8 w-8 text-yellow-400" />,
@@ -77,6 +63,14 @@ export default function LandingPage() {
       color: "cyan"
     }
   ];
+  const colorClasses = {
+    blue: { text: 'text-blue-400', bg: 'bg-blue-950/50', border: 'border-blue-500/30', hoverBorder: 'hover:border-blue-500/80', glow: 'from-blue-500/50' },
+    yellow: { text: 'text-yellow-400', bg: 'bg-yellow-950/50', border: 'border-yellow-500/30', hoverBorder: 'hover:border-yellow-500/80', glow: 'from-yellow-500/50' },
+    green: { text: 'text-green-400', bg: 'bg-green-950/50', border: 'border-green-500/30', hoverBorder: 'hover:border-green-500/80', glow: 'from-green-500/50' },
+    purple: { text: 'text-purple-400', bg: 'bg-purple-950/50', border: 'border-purple-500/30', hoverBorder: 'hover:border-purple-500/80', glow: 'from-purple-500/50' },
+    pink: { text: 'text-pink-400', bg: 'bg-pink-950/50', border: 'border-pink-500/30', hoverBorder: 'hover:border-pink-500/80', glow: 'from-pink-500/50' },
+    cyan: { text: 'text-cyan-400', bg: 'bg-cyan-950/50', border: 'border-cyan-500/30', hoverBorder: 'hover:border-cyan-500/80', glow: 'from-cyan-500/50' },
+  };
   const heroScale = useTransform(scrollY, [0, 400], [1, 1.4]); // 1.15 - max scale
   const heroTranslateY = useTransform(scrollY, [0, 400], [0, 100]); // 80 - max translate
   return (
@@ -133,7 +127,7 @@ export default function LandingPage() {
             <motion.h1 className="text-5xl md:text-8xl font-bold mb-6 bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent leading-tight"
               animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
               initial={{ y: 40, opacity: 0, filter: "blur(10px)" }}
-              transition={{ duration: 0.5 }}
+              transition={{ duration: 0.5, ease: "easeInOut", delay: 0.1 }}
             >
               Revolutionize Your
               <br />
@@ -183,53 +177,56 @@ export default function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="relative z-10 px-6 py-20 mt-20">
+      <section id="features" className="relative z-10 w-full px-6 py-20 pt-30">
+        {/* Background decoration */}
+
+
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-              Powerful Features
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+              A More Powerful Workflow
             </h2>
             <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-              Everything you need to streamline your code review process and maintain high-quality code standards.
+              Streamline your code review process and ship with confidence using our suite of intelligent tools.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <motion.div
-                key={index}
-                className="relative bg-black/35 rounded-lg group overflow-hidden cursor-pointer"
+            {features.map((feature, index) => {
+              const colors = colorClasses[feature.color as keyof typeof colorClasses];
+              console.log(colors);
+              return (
+                <motion.div
+                  key={index}
+                  className="relative group cursor-pointer"
+                  // Animation properties for each card, with a staggered delay.
+                  initial={{ y: 50, opacity: 0 }}
+                  whileInView={{ y: 0, opacity: 1 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ duration: 0.5, delay: 0.1 * index }}
+                  whileHover={{ scale: 1.03, y: -8, transition: { duration: 0.2 } }}
+                >
+                  {/* The main card element with glassmorphism effect and dynamic border */}
+                  <div className={`relative bg-slate-900/80 backdrop-blur-sm rounded-xl p-8 h-full overflow-hidden border transition-colors duration-300 ${colors.border} ${colors.hoverBorder}`}>
 
-                initial={{ y: 40, filter: "blur(10px)", opacity: 0 }}
-                whileInView={{ y: 0, filter: "blur(0px)", opacity: 1 }}
-                exit={{ y: 20, filter: "blur(5px)", opacity: 0 }}
-                transition={{ duration: 0.3, delay: 0.2 * index }}
+                    {/* The glowing effect that appears on hover */}
+                    <div className={`absolute -top-1/2 -right-1/2 w-[160%] h-[160%] bg-radial-gradient(at_center_center,${colors.glow}_0,transparent_50%) opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10`} />
 
-              >
-                {/* Gradient overlay on hover */}
-                <div
-                  className={`
-                  absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500
-                  ${feature.color === "bg-blue-400" ? "bg-gradient-to-t from-blue-600/40 to-transparent" : ""}
-                  ${feature.color === "yellow" ? "bg-gradient-to-t from-yellow-600/40 to-transparent" : ""}
-                  ${feature.color === "green" ? "bg-gradient-to-t from-green-600/40 to-transparent" : ""}
-                  ${feature.color === "purple" ? "bg-gradient-to-t from-purple-600/40 to-transparent" : ""}
-                  ${feature.color === "pink" ? "bg-gradient-to-t from-pink-600/40 to-transparent" : ""}
-                  ${feature.color === "cyan" ? "bg-gradient-to-t from-cyan-600/40 to-transparent" : ""}
-                `}
-                  style={{ zIndex: 1 }}
-                />
-                <CardContent className="relative p-8 z-10">
-                  <div className="mb-4">{feature.icon}</div>
-                  <h3 className="text-xl font-semibold mb-3 text-white">{feature.title}</h3>
-                  <p className="text-gray-400 leading-relaxed">{feature.description}</p>
-                </CardContent>
-              </motion.div>
-            ))}
+                    {/* Card Content */}
+                    <div className="relative z-10 flex flex-col h-full">
+                      <div className={`mb-5 inline-block p-3 rounded-lg ${colors.bg} ${colors.text}`}>
+                        {feature.icon}
+                      </div>
+                      <h3 className="text-xl font-semibold mb-3 text-white">{feature.title}</h3>
+                      <p className="text-gray-400 leading-relaxed flex-grow">{feature.description}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>
-
       <WorkflowSection />
 
 
