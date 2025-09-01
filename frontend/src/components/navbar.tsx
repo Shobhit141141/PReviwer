@@ -22,7 +22,7 @@ function Navbar() {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <Image src="/git.png" alt="" className="w-[40px]" />
+              <Image src="/git.png" alt="logo" className="w-[40px]" width={40} height={40} />
               <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent hidden sm:block font-mono">
                 PReviewer <span className="text-xs 
                 text-white 
@@ -62,8 +62,10 @@ function Navbar() {
                 <div className="flex items-center space-x-2">
                   <Image 
                     src={user.avatar} 
-                    alt={user.name} 
+                    alt={user.name || "User Avatar"} 
                     className="w-10 h-10 rounded-full "
+                    width={40}
+                    height={40}
                   />
                   <div className="hidden sm:block text-left">
                     <p className="text-sm font-medium text-white">{user.name}</p>

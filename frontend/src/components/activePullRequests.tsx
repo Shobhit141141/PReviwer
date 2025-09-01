@@ -156,6 +156,8 @@ function ActivePullRequests() {
                           src={pr.creator.avatar}
                           alt={pr.creator.username}
                           className="w-10 h-10 rounded-full ml-2 border border-gray-700"
+                          width={40}
+                          height={40}
                         />
                       )}
                     </div>

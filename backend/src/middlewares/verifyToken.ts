@@ -33,7 +33,7 @@ export const githubAuthMiddleware = async (req: Request, res: Response, next: Ne
     const userInfo: UserInfo = {
       id: user._id.toString(),
       email: user.email || '',
-      name: user.name,
+      name: user.name || '',
       username: user.username,
       avatar: user.avatar,
     };

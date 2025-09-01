@@ -150,6 +150,8 @@ const PrContent: React.FC<PrContentProps> = ({
                 src={prData.author.avatar_url}
                 alt={prData.author.name}
                 className="w-6 h-6 rounded-full"
+                width={24}
+                height={24}
               />
               <span>{prData.author.name || prData.author.login}</span>
             </div>
@@ -243,6 +245,8 @@ const PrContent: React.FC<PrContentProps> = ({
                           src={commit.author.avatar_url || "/default-avatar.png"}
                           alt={commit.author.name}
                           className="w-4 h-4 rounded-full flex-shrink-0"
+                          width={16}
+                          height={16}
                         />
                         <p className="text-xs text-gray-400 truncate">
                           {formatDate(commit.date)} by {commit.author.name || commit.author.login}
@@ -474,6 +478,8 @@ const PrContent: React.FC<PrContentProps> = ({
                         src={assignee.avatar_url}
                         alt={assignee.name}
                         className="w-6 h-6 rounded-full flex-shrink-0"
+                        width={24}
+                        height={24}
                       />
                       <span className="text-sm truncate">{assignee.login}</span>
                     </div>
@@ -492,6 +498,8 @@ const PrContent: React.FC<PrContentProps> = ({
                         src={reviewer.avatar_url}
                         alt={reviewer.name}
                         className="w-6 h-6 rounded-full flex-shrink-0"
+                        width={24}
+                        height={24}
                       />
                       <span className="text-sm truncate">{reviewer.login}</span>
                     </div>

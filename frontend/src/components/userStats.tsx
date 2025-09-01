@@ -72,6 +72,8 @@ function UserStats() {
                             src={userStats?.avatar || "/default-avatar.png"}
                             alt="GitHub Avatar"
                             className="w-16 h-16 rounded-full border border-gray-700"
+                            width={64}
+                            height={64}
                         />
                         <div>
                             <p className="text-white text-lg font-semibold">{userStats?.username}</p>
