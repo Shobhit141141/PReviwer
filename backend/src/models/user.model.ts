@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   avatar: { type: String, default: 'https://www.gravatar.com/avatar/' },
   bio: { type: String, default: '' },
-  email: { type: String, required: false, },
+  email: { type: String, required: false, unique: true, sparse: true },
   github_refresh_token: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
